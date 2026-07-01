@@ -9,8 +9,8 @@ class StatsBombNormalizationTest(unittest.TestCase):
         lineups = load_json("data/sample/statsbomb_lineups_sample.json")
         players = lineup_player_minutes(lineups)
 
-        self.assertEqual(players["Lionel Messi"]["minutes"], 82.0)
-        self.assertEqual(players["Kylian Mbappe"]["role_group"], "winger")
+        self.assertEqual(players["Demo Creator 10"]["minutes"], 82.0)
+        self.assertEqual(players["Demo Winger 11"]["role_group"], "winger")
 
     def test_statsbomb_events_to_player_stats_merges_events_and_lineups(self):
         events = load_json("data/sample/events_sample.json")
@@ -22,15 +22,14 @@ class StatsBombNormalizationTest(unittest.TestCase):
             away_team="France",
             lineups=lineups,
         )
-        messi = next(row for row in rows if row.player == "Lionel Messi")
-        griezmann = next(row for row in rows if row.player == "Antoine Griezmann")
+        creator = next(row for row in rows if row.player == "Demo Creator 10")
+        playmaker = next(row for row in rows if row.player == "Demo Playmaker 7")
 
-        self.assertEqual(messi.minutes, 82.0)
-        self.assertEqual(messi.opponent, "France")
-        self.assertEqual(griezmann.team, "France")
+        self.assertEqual(creator.minutes, 82.0)
+        self.assertEqual(creator.opponent, "France")
+        self.assertEqual(playmaker.team, "France")
         self.assertGreaterEqual(len(rows), 7)
 
 
 if __name__ == "__main__":
     unittest.main()
-

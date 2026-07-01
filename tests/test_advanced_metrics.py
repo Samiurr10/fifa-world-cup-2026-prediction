@@ -8,9 +8,9 @@ from fifa_analysis.features import read_player_match_stats
 class AdvancedMetricsTest(unittest.TestCase):
     def test_advanced_metrics_are_bounded_and_role_aware(self):
         stats = read_player_match_stats("data/sample/player_match_stats_sample.csv")
-        mbappe = next(row for row in stats if row.player == "Kylian Mbappe")
+        winger = next(row for row in stats if row.player == "Demo Winger 11")
 
-        metrics = calculate_advanced_metrics(mbappe)
+        metrics = calculate_advanced_metrics(winger)
 
         self.assertEqual(metrics.role_group, "winger")
         self.assertGreaterEqual(metrics.role_fit_score, 0)
@@ -21,4 +21,3 @@ class AdvancedMetricsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

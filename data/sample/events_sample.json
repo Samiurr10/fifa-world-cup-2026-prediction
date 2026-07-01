@@ -1,7 +1,7 @@
 [
   {
     "type": {"name": "Carry"},
-    "player": {"name": "Lionel Messi"},
+    "player": {"name": "Demo Creator 10"},
     "team": {"name": "Argentina"},
     "position": {"name": "Center Attacking Midfield"},
     "location": [48, 39],
@@ -9,7 +9,7 @@
   },
   {
     "type": {"name": "Pass"},
-    "player": {"name": "Lionel Messi"},
+    "player": {"name": "Demo Creator 10"},
     "team": {"name": "Argentina"},
     "position": {"name": "Center Attacking Midfield"},
     "location": [68, 35],
@@ -17,7 +17,7 @@
   },
   {
     "type": {"name": "Shot"},
-    "player": {"name": "Julian Alvarez"},
+    "player": {"name": "Demo Striker 9"},
     "team": {"name": "Argentina"},
     "position": {"name": "Center Forward"},
     "location": [103, 39],
@@ -25,21 +25,21 @@
   },
   {
     "type": {"name": "Interception"},
-    "player": {"name": "Enzo Fernandez"},
+    "player": {"name": "Demo Controller 8"},
     "team": {"name": "Argentina"},
     "position": {"name": "Center Midfield"},
     "location": [54, 43]
   },
   {
     "type": {"name": "Ball Recovery"},
-    "player": {"name": "Nicolas Otamendi"},
+    "player": {"name": "Demo Center Back 4"},
     "team": {"name": "Argentina"},
     "position": {"name": "Center Back"},
     "location": [36, 42]
   },
   {
     "type": {"name": "Carry"},
-    "player": {"name": "Kylian Mbappe"},
+    "player": {"name": "Demo Winger 11"},
     "team": {"name": "France"},
     "position": {"name": "Left Wing"},
     "location": [57, 21],
@@ -47,7 +47,7 @@
   },
   {
     "type": {"name": "Dribble"},
-    "player": {"name": "Kylian Mbappe"},
+    "player": {"name": "Demo Winger 11"},
     "team": {"name": "France"},
     "position": {"name": "Left Wing"},
     "location": [78, 18],
@@ -55,7 +55,7 @@
   },
   {
     "type": {"name": "Shot"},
-    "player": {"name": "Kylian Mbappe"},
+    "player": {"name": "Demo Winger 11"},
     "team": {"name": "France"},
     "position": {"name": "Left Wing"},
     "location": [100, 28],
@@ -63,14 +63,14 @@
   },
   {
     "type": {"name": "Pressure"},
-    "player": {"name": "Aurelien Tchouameni"},
+    "player": {"name": "Demo Anchor 6"},
     "team": {"name": "France"},
     "position": {"name": "Center Defensive Midfield"},
     "location": [62, 41]
   },
   {
     "type": {"name": "Pass"},
-    "player": {"name": "Antoine Griezmann"},
+    "player": {"name": "Demo Playmaker 7"},
     "team": {"name": "France"},
     "position": {"name": "Center Attacking Midfield"},
     "location": [61, 33],

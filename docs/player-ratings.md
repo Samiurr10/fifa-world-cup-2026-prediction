@@ -67,7 +67,7 @@ If actual/external ratings are available, provide a CSV:
 
 ```csv
 match_id,player,team,external_rating,source
-ARG-1,Lionel Messi,Argentina,8.8,sample_external
+ARG-1,Demo Creator 10,Argentina,8.8,sample_external
 ```
 
 Then run:

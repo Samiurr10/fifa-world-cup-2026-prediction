@@ -47,6 +47,7 @@ The dashboard includes:
 
 - The dashboard is generated from real CSV/JSON outputs.
 - It does not invent missing player stats.
+- The committed sample dashboard uses synthetic `Demo ...` player names and must not be interpreted as current World Cup roster truth.
 - It escapes dynamic values before rendering.
 - It is responsive for desktop and mobile widths.
 - It uses inline SVG/CSS, so it works offline.

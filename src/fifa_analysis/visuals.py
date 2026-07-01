@@ -150,6 +150,23 @@ def kpi_card(label: str, value: str, detail: str, class_name: str = "") -> str:
     )
 
 
+def data_quality_banner(overall_rows: list[dict[str, str]], game_rows: list[dict[str, str]]) -> str:
+    players = [row.get("player", "") for row in overall_rows + game_rows]
+    if any(player.startswith("Demo ") for player in players):
+        return """
+        <section class="data-banner">
+          <strong>Demo data view</strong>
+          <span>This dashboard is generated from synthetic sample players. Do not interpret these names, ratings, or results as current World Cup facts. Import verified roster, lineup, event, and rating data before using it for real analysis.</span>
+        </section>
+        """
+    return """
+    <section class="data-banner verified">
+      <strong>Imported data view</strong>
+      <span>Interpret results according to the quality and coverage of the imported source files. Ratings remain model-generated unless validated against trusted external ratings.</span>
+    </section>
+    """
+
+
 def prediction_section(prediction: dict[str, Any]) -> str:
     if not prediction:
         return '<section class="panel"><h2>Prediction</h2><p>No prediction data found.</p></section>'
@@ -457,6 +474,26 @@ def css() -> str:
       padding: 18px;
       min-height: 118px;
     }
+    .data-banner {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+      margin: 0 0 16px;
+      padding: 13px 16px;
+      border: 1px solid #f0c36d;
+      background: #fff7e6;
+      color: #634600;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .data-banner.verified {
+      border-color: #a9d9c2;
+      background: #eef9f3;
+      color: #145d40;
+    }
+    .data-banner strong { white-space: nowrap; }
+    .data-banner span { line-height: 1.45; }
     .kpi span, .eyebrow {
       color: var(--muted);
       text-transform: uppercase;
@@ -601,6 +638,7 @@ def css() -> str:
     footer { color: var(--muted); text-align: center; padding: 22px; }
     @media (max-width: 860px) {
       .prediction-grid, .metric-grid, .player-visuals { grid-template-columns: 1fr; }
+      .data-banner { grid-template-columns: 1fr; }
       dl { grid-template-columns: repeat(2, 1fr); }
       .xg-line { grid-template-columns: 1fr; }
     }
@@ -656,6 +694,7 @@ def render_dashboard(
     </nav>
   </header>
   <main>
+    {data_quality_banner(sorted_overall, game_rows)}
     <section class="kpi-row">{"".join(kpis)}</section>
     {prediction_section(prediction)}
     {player_cards(sorted_overall, game_rows, advanced_rows)}

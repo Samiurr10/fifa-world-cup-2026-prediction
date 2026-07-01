@@ -10,7 +10,7 @@ class VisualDashboardTest(unittest.TestCase):
         markup = render_dashboard(
             overall_rows=[
                 {
-                    "player": "<Player>",
+                    "player": "Demo <Player>",
                     "team": "Argentina",
                     "role_group": "attacking_midfielder",
                     "matches": "1",
@@ -22,7 +22,7 @@ class VisualDashboardTest(unittest.TestCase):
             ],
             game_rows=[
                 {
-                    "player": "<Player>",
+                    "player": "Demo <Player>",
                     "team": "Argentina",
                     "opponent": "France",
                     "role_group": "attacking_midfielder",
@@ -36,7 +36,7 @@ class VisualDashboardTest(unittest.TestCase):
             ],
             advanced_rows=[
                 {
-                    "player": "<Player>",
+                    "player": "Demo <Player>",
                     "team": "Argentina",
                     "opponent": "France",
                     "role_group": "attacking_midfielder",
@@ -67,6 +67,7 @@ class VisualDashboardTest(unittest.TestCase):
         )
 
         self.assertIn("Match Prediction", markup)
+        self.assertIn("Demo data view", markup)
         self.assertIn("Overall leaderboard", markup)
         self.assertIn("Best single-game performances", markup)
         self.assertIn("Role-fit and advanced player metrics", markup)

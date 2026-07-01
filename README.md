@@ -115,6 +115,8 @@ make sample-ratings
 
 This creates `data/db/sample_worldcup_ratings.sqlite`, loads sample player-game stats, computes game ratings, computes overall ratings, validates against sample external ratings, and exports CSV/JSON reports.
 
+The committed sample dataset uses synthetic `Demo ...` players. It exists to verify the pipeline and dashboard; real player analysis requires imported roster, lineup, event, and rating data from trusted sources.
+
 Generate the visual dashboard:
 
 ```bash

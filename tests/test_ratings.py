@@ -18,13 +18,12 @@ class RatingEngineTest(unittest.TestCase):
         players = read_player_match_stats("data/sample/player_match_stats_sample.csv")
         ratings = [rate_player_game(row) for row in players]
         overall = build_overall_ratings(ratings)
-        messi = next(row for row in overall if row.player == "Lionel Messi")
+        creator = next(row for row in overall if row.player == "Demo Creator 10")
 
-        self.assertEqual(messi.matches, 5)
-        self.assertGreater(messi.weighted_rating, 6.0)
-        self.assertEqual(messi.confidence, "high")
+        self.assertEqual(creator.matches, 5)
+        self.assertGreater(creator.weighted_rating, 6.0)
+        self.assertEqual(creator.confidence, "high")
 
 
 if __name__ == "__main__":
     unittest.main()
-
