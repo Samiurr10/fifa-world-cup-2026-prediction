@@ -2,12 +2,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fifa_analysis.visuals import generate_dashboard, render_dashboard
+from fifa_analysis.visuals import dashboard_data, generate_dashboard, render_dashboard
 
 
 class VisualDashboardTest(unittest.TestCase):
     def test_render_dashboard_contains_core_sections_and_escapes_values(self):
-        markup = render_dashboard(
+        data = dashboard_data(
             overall_rows=[
                 {
                     "player": "Demo <Player>",
@@ -75,14 +75,14 @@ class VisualDashboardTest(unittest.TestCase):
             validation={"mae": 0.2, "correlation": 0.9, "within_half_point_rate": 0.8},
             backtest={"exact_score_top3_rate": 0.5, "outcome_accuracy": 0.6, "log_loss": 1.0},
         )
+        markup = render_dashboard()
 
-        self.assertIn("Interactive dashboard", markup)
-        self.assertIn("playerSearch", markup)
-        self.assertIn("teamA", markup)
-        self.assertIn("Demo data view", markup)
-        self.assertIn("Searchable player ratings", markup)
-        self.assertIn("Role-fit leaderboard", markup)
-        self.assertIn("\\u003cPlayer\\u003e", markup)
+        self.assertIn("assets/dashboard.css", markup)
+        self.assertIn("assets/dashboard.js", markup)
+        self.assertIn("globalSearch", markup)
+        self.assertIn("view-players", markup)
+        self.assertIn("Predictions", markup)
+        self.assertEqual(data["overall"][0]["player"], "Demo <Player>")
         self.assertNotIn("<Player>", markup)
 
     def test_generate_dashboard_writes_html_file(self):
@@ -92,6 +92,7 @@ class VisualDashboardTest(unittest.TestCase):
                 overall_ratings_path="reports/player_overall_ratings.csv",
                 game_ratings_path="reports/player_game_ratings.csv",
                 advanced_metrics_path="reports/player_advanced_metrics.csv",
+                roster_path="data/official/fifa_squads_2026.csv",
                 team_stats_path="data/sample/team_match_stats_sample.csv",
                 prediction_path="reports/match_prediction.json",
                 validation_path="reports/rating_validation.json",
@@ -100,6 +101,9 @@ class VisualDashboardTest(unittest.TestCase):
             )
 
             self.assertTrue(output.exists())
+            self.assertTrue((Path(tmpdir) / "index-assets" / "dashboard.css").exists())
+            self.assertTrue((Path(tmpdir) / "index-assets" / "dashboard.js").exists())
+            self.assertTrue((Path(tmpdir) / "index-assets" / "app-data.json").exists())
             self.assertIn("<!doctype html>", output.read_text(encoding="utf-8"))
 
 

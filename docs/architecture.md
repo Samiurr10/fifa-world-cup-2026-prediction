@@ -70,8 +70,9 @@ It also ranks player impact with role-specific formulas and opponent matchup adj
 
 ## Visual Dashboard Layer
 
-`visuals.py` renders a self-contained interactive HTML dashboard from generated CSV/JSON outputs:
+`visuals.py` renders a generated static dashboard app from official roster data and generated CSV/JSON outputs:
 
+- official roster rows
 - overall ratings
 - player-game ratings
 - advanced role metrics
@@ -80,7 +81,7 @@ It also ranks player impact with role-specific formulas and opponent matchup adj
 - rating validation
 - backtest metrics
 
-The dashboard embeds sanitized data as JSON and uses vanilla JavaScript for team selectors, roster comparison, player search, role filtering, and player-vs-player comparison. It uses inline CSS so it can run offline without a frontend framework or build step.
+The dashboard writes an HTML shell plus isolated CSS, JavaScript, and JSON data assets. Vanilla JavaScript powers team selectors, roster comparison, player search, role filtering, leaderboards, prediction states, coverage cards, and player-vs-player comparison. It does not require a frontend framework or build step.
 
 ## Report Layer
 

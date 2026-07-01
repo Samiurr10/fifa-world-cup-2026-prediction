@@ -25,6 +25,8 @@ Primary free sources:
 - [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json): public-domain World Cup JSON data, including a 2026 folder.
 - [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026): no-key 2026 World Cup API candidate with matches, teams, groups, standings, scores, and stadiums.
 - [football-data.org](https://www.football-data.org/documentation/api): backup fixture/result API; requires an API token.
+- FIFA official squad list PDF/CSV for the 48 World Cup squads and 1,248 players.
+- API-Football for real teams, fixtures, squads, and fixture player stats when `API_FOOTBALL_KEY` is available.
 
 Kaggle datasets can be added as local CSV inputs after checking columns and license terms.
 
@@ -63,6 +65,9 @@ This runs unit tests and generates:
 - `reports/match_report.md`
 - `reports/backtest.json`
 - `site/index.html`
+- `site/index-assets/dashboard.css`
+- `site/index-assets/dashboard.js`
+- `site/index-assets/app-data.json`
 
 ## Main Commands
 
@@ -115,12 +120,12 @@ make sample-ratings
 
 This creates `data/db/sample_worldcup_ratings.sqlite`, loads sample player-game stats, computes game ratings, computes overall ratings, validates against sample external ratings, and exports CSV/JSON reports.
 
-The committed sample dataset uses synthetic `Demo ...` players. It exists to verify the pipeline and dashboard; real player analysis requires imported roster, lineup, event, and rating data from trusted sources.
+The committed sample dataset uses synthetic `Demo ...` players only for pipeline tests. The default dashboard uses the official FIFA squad CSV in `data/official/fifa_squads_2026.csv`, not the sample players.
 
-Generate the visual dashboard:
+Generate the official roster dashboard:
 
 ```bash
-make sample-dashboard
+make official-dashboard
 ```
 
 Then open:
@@ -129,7 +134,24 @@ Then open:
 site/index.html
 ```
 
-The dashboard lets you choose any two loaded teams, compare their profiles and rosters, search every loaded player, filter by role, compare two players side by side, inspect role-fit metrics, and review prediction and validation outputs.
+The dashboard lets you choose any two teams, compare squad profiles, search all 1,248 official players, filter by team/role, compare players side by side, inspect caps/goals/age/height/club, and view rating/prediction coverage status.
+
+Fetch API-Football data after creating a free key:
+
+```bash
+export API_FOOTBALL_KEY=your_key_here
+make api-football-ingest
+```
+
+API-Football fixture player stats can then be loaded into the rating database to unlock real per-game ratings, advanced metrics, and prediction confidence. Unsupported fields such as xG, pressures, and progressive carries remain empty instead of being invented.
+
+Generate the synthetic sample dashboard separately:
+
+```bash
+make sample-dashboard
+```
+
+This writes `site/sample.html` and isolated `site/sample-assets/*`.
 
 Normalize an openfootball-style JSON file:
 
@@ -151,7 +173,7 @@ The v1 model is transparent and auditable:
 - Backtesting tracks exact-score top-3 hit rate, outcome accuracy, Brier score, log loss, and calibration buckets.
 - Player ratings are role-aware, stored per game, aggregated overall, and validated against external ratings when available.
 - Advanced role-fit metrics track attacking involvement, progression, ball security, defensive disruption, goalkeeping value, two-way value, usage, and xG efficiency.
-- Visual dashboards are generated from the real report outputs and include team selectors, roster comparison, searchable player tables, player-vs-player comparison, advanced metric tables, prediction bars, validation metrics, and leaderboards.
+- Visual dashboards are generated from official roster data plus real imported report outputs. They include team selectors, roster comparison, searchable player tables, player-vs-player comparison, leaderboards, prediction panels, validation metrics, and data coverage states.
 
 ## Player Rating Database
 
@@ -168,7 +190,7 @@ See [docs/database.md](docs/database.md) and [docs/player-ratings.md](docs/playe
 
 ## Visual Dashboard
 
-The dashboard is a self-contained HTML file with inline CSS and vanilla JavaScript. It can be opened directly or published later with GitHub Pages.
+The dashboard is a small static app generated under `site/`: an HTML shell plus isolated CSS, JavaScript, and JSON data assets. It can be served locally or published later with GitHub Pages.
 
 See [docs/visual-dashboard.md](docs/visual-dashboard.md).
 

@@ -4,13 +4,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from fifa_analysis.connectors import (
+    fetch_api_football,
     load_json,
     match_records_to_rows,
+    normalize_api_football_fixture_players,
+    normalize_api_football_fixtures,
+    normalize_api_football_squad,
+    normalize_api_football_teams,
     normalize_openfootball_matches,
     normalize_worldcup2026_api,
+    player_match_stats_to_rows,
     read_match_records,
     write_csv_rows,
 )
@@ -87,6 +94,61 @@ def command_ingest_worldcup2026(args: argparse.Namespace) -> None:
     matches = normalize_worldcup2026_api(payload)
     write_csv_rows(args.output, match_records_to_rows(matches))
     print(f"Wrote {len(matches)} normalized matches to {args.output}")
+
+
+def command_ingest_api_football(args: argparse.Namespace) -> None:
+    api_key = args.api_key or os.environ.get(args.api_key_env)
+    if not api_key:
+        raise SystemExit(
+            f"Missing API-Football key. Create a free key and set {args.api_key_env}=<key> "
+            "or pass --api-key."
+        )
+
+    teams_payload = fetch_api_football(
+        "teams", api_key, {"league": args.league_id, "season": args.season}
+    )
+    team_rows = normalize_api_football_teams(teams_payload)
+    write_csv_rows(args.teams_output, team_rows)
+
+    fixtures_payload = fetch_api_football(
+        "fixtures", api_key, {"league": args.league_id, "season": args.season}
+    )
+    matches = normalize_api_football_fixtures(fixtures_payload)
+    write_csv_rows(args.matches_output, match_records_to_rows(matches))
+
+    roster_rows: list[dict[str, object]] = []
+    for team_row in team_rows:
+        team_id = team_row.get("team_id")
+        if not team_id:
+            continue
+        squad_payload = fetch_api_football("players/squads", api_key, {"team": team_id})
+        roster_rows.extend(normalize_api_football_squad(squad_payload))
+    write_csv_rows(args.roster_output, roster_rows)
+
+    player_stat_rows = []
+    if not args.skip_player_stats:
+        finished_matches = [
+            match
+            for match in matches
+            if match.home_goals is not None and match.away_goals is not None and match.match_id
+        ]
+        if args.max_player_stat_fixtures:
+            finished_matches = finished_matches[: args.max_player_stat_fixtures]
+        for match in finished_matches:
+            opponents = {match.home_team: match.away_team, match.away_team: match.home_team}
+            fixture_payload = fetch_api_football("fixtures/players", api_key, {"fixture": match.match_id})
+            player_stat_rows.extend(
+                normalize_api_football_fixture_players(
+                    fixture_payload,
+                    match_id=match.match_id,
+                    opponents_by_team=opponents,
+                )
+            )
+    write_csv_rows(args.player_stats_output, player_match_stats_to_rows(player_stat_rows))
+    print(
+        f"Wrote {len(team_rows)} teams, {len(matches)} matches, {len(roster_rows)} roster players, "
+        f"and {len(player_stat_rows)} player stat rows from API-Football."
+    )
 
 
 def command_predict_match(args: argparse.Namespace) -> None:
@@ -250,6 +312,7 @@ def command_dashboard(args: argparse.Namespace) -> None:
         overall_ratings_path=args.overall_ratings,
         game_ratings_path=args.game_ratings,
         advanced_metrics_path=args.advanced_metrics,
+        roster_path=args.roster,
         team_stats_path=args.team_stats,
         prediction_path=args.prediction,
         validation_path=args.validation,
@@ -301,6 +364,33 @@ def build_parser() -> argparse.ArgumentParser:
     worldcup2026.add_argument("--input", type=Path, required=True)
     worldcup2026.add_argument("--output", type=Path, default=Path("reports/matches.csv"))
     worldcup2026.set_defaults(func=command_ingest_worldcup2026)
+
+    api_football = subparsers.add_parser(
+        "ingest-api-football",
+        help="Fetch real World Cup teams, fixtures, squads, and optional player stats from API-Football.",
+    )
+    api_football.add_argument("--api-key", help="API-Football key. Defaults to API_FOOTBALL_KEY env var.")
+    api_football.add_argument("--api-key-env", default="API_FOOTBALL_KEY")
+    api_football.add_argument("--league-id", type=int, default=1, help="API-Football World Cup league id.")
+    api_football.add_argument("--season", type=int, default=2026)
+    api_football.add_argument("--teams-output", type=Path, default=Path("data/official/api_football_teams.csv"))
+    api_football.add_argument("--matches-output", type=Path, default=Path("reports/api_football_matches.csv"))
+    api_football.add_argument("--roster-output", type=Path, default=Path("data/official/api_football_roster.csv"))
+    api_football.add_argument(
+        "--player-stats-output", type=Path, default=Path("reports/api_football_player_match_stats.csv")
+    )
+    api_football.add_argument(
+        "--skip-player-stats",
+        action="store_true",
+        help="Only fetch teams, fixtures, and squads. Saves free-tier requests.",
+    )
+    api_football.add_argument(
+        "--max-player-stat-fixtures",
+        type=int,
+        default=20,
+        help="Limit fixture-player stat calls so free-tier users do not burn the full quota.",
+    )
+    api_football.set_defaults(func=command_ingest_api_football)
 
     match = subparsers.add_parser(
         "predict-match", help="Predict expected goals, top scorelines, and win/draw/loss."
@@ -413,16 +503,19 @@ def build_parser() -> argparse.ArgumentParser:
         "dashboard", help="Generate a self-contained HTML performance dashboard."
     )
     dashboard.add_argument(
-        "--overall-ratings", type=Path, default=Path("reports/player_overall_ratings.csv")
+        "--overall-ratings", type=Path, default=Path("reports/api_football_player_overall_ratings.csv")
     )
-    dashboard.add_argument("--game-ratings", type=Path, default=Path("reports/player_game_ratings.csv"))
     dashboard.add_argument(
-        "--advanced-metrics", type=Path, default=Path("reports/player_advanced_metrics.csv")
+        "--game-ratings", type=Path, default=Path("reports/api_football_player_game_ratings.csv")
     )
-    dashboard.add_argument("--team-stats", type=Path, default=Path("data/sample/team_match_stats_sample.csv"))
-    dashboard.add_argument("--prediction", type=Path, default=Path("reports/match_prediction.json"))
-    dashboard.add_argument("--validation", type=Path, default=Path("reports/rating_validation.json"))
-    dashboard.add_argument("--backtest", type=Path, default=Path("reports/backtest.json"))
+    dashboard.add_argument(
+        "--advanced-metrics", type=Path, default=Path("reports/api_football_player_advanced_metrics.csv")
+    )
+    dashboard.add_argument("--roster", type=Path, default=Path("data/official/fifa_squads_2026.csv"))
+    dashboard.add_argument("--team-stats", type=Path, default=Path("reports/api_football_team_match_stats.csv"))
+    dashboard.add_argument("--prediction", type=Path, default=Path("reports/api_football_match_prediction.json"))
+    dashboard.add_argument("--validation", type=Path, default=Path("reports/api_football_rating_validation.json"))
+    dashboard.add_argument("--backtest", type=Path, default=Path("reports/api_football_backtest.json"))
     dashboard.add_argument("--output", type=Path, default=Path("site/index.html"))
     dashboard.add_argument("--title", default="FIFA World Cup 2026 Performance Dashboard")
     dashboard.set_defaults(func=command_dashboard)
