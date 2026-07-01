@@ -34,6 +34,22 @@ class VisualDashboardTest(unittest.TestCase):
                     "goalkeeping_score": "0.1",
                 }
             ],
+            advanced_rows=[
+                {
+                    "player": "<Player>",
+                    "team": "Argentina",
+                    "opponent": "France",
+                    "role_group": "attacking_midfielder",
+                    "role_fit_score": "8.0",
+                    "attacking_involvement": "8.2",
+                    "progression_value": "7.1",
+                    "ball_security": "6.9",
+                    "defensive_disruption": "2.4",
+                    "two_way_value": "5.0",
+                    "usage_rate": "7.5",
+                    "xg_efficiency": "5.4",
+                }
+            ],
             prediction={
                 "home_team": "Argentina",
                 "away_team": "France",
@@ -53,6 +69,7 @@ class VisualDashboardTest(unittest.TestCase):
         self.assertIn("Match Prediction", markup)
         self.assertIn("Overall leaderboard", markup)
         self.assertIn("Best single-game performances", markup)
+        self.assertIn("Role-fit and advanced player metrics", markup)
         self.assertIn("&lt;Player&gt;", markup)
         self.assertNotIn("<Player>", markup)
 
@@ -62,6 +79,7 @@ class VisualDashboardTest(unittest.TestCase):
             generate_dashboard(
                 overall_ratings_path="reports/player_overall_ratings.csv",
                 game_ratings_path="reports/player_game_ratings.csv",
+                advanced_metrics_path="reports/player_advanced_metrics.csv",
                 prediction_path="reports/match_prediction.json",
                 validation_path="reports/rating_validation.json",
                 backtest_path="reports/backtest.json",
@@ -74,4 +92,3 @@ class VisualDashboardTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -6,14 +6,17 @@ from fifa_analysis.connectors import read_match_records
 from fifa_analysis.database import (
     connect,
     fetch_player_stats,
+    fetch_advanced_metrics,
     init_db,
     table_count,
+    upsert_advanced_metrics,
     upsert_game_ratings,
     upsert_matches,
     upsert_overall_ratings,
     upsert_player_stats,
 )
 from fifa_analysis.features import read_player_match_stats
+from fifa_analysis.advanced_metrics import calculate_many
 from fifa_analysis.ratings import build_overall_ratings, rate_player_game
 
 
@@ -29,15 +32,18 @@ class DatabaseTest(unittest.TestCase):
                 self.assertEqual(upsert_player_stats(conn, stats), len(stats))
                 stored_stats = fetch_player_stats(conn)
                 ratings = [rate_player_game(row) for row in stored_stats]
+                advanced = calculate_many(stored_stats)
                 overall = build_overall_ratings(ratings)
                 upsert_game_ratings(conn, ratings)
+                upsert_advanced_metrics(conn, advanced)
                 upsert_overall_ratings(conn, overall)
 
                 self.assertEqual(table_count(conn, "player_game_stats"), len(stats))
                 self.assertEqual(table_count(conn, "player_game_ratings"), len(stats))
+                self.assertEqual(table_count(conn, "player_advanced_metrics"), len(stats))
+                self.assertEqual(len(fetch_advanced_metrics(conn)), len(stats))
                 self.assertGreater(table_count(conn, "player_overall_ratings"), 0)
 
 
 if __name__ == "__main__":
     unittest.main()
-

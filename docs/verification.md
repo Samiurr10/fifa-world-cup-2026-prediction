@@ -18,6 +18,7 @@ Expected result:
 - backtest metrics JSON is generated
 - player-game ratings are generated
 - overall player ratings are generated
+- advanced player metrics are generated
 - rating validation metrics are generated
 - rating coverage metrics are generated
 - the HTML visual dashboard is generated
@@ -65,6 +66,7 @@ Rating output should include:
 - role group
 - confidence
 - validation MAE/correlation when external ratings are provided
+- advanced role-fit, progression, security, defensive disruption, usage, and xG efficiency metrics
 
 Dashboard output should include:
 

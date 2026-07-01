@@ -57,6 +57,7 @@ This runs unit tests and generates:
 - `reports/player_impact.csv`
 - `reports/player_game_ratings.csv`
 - `reports/player_overall_ratings.csv`
+- `reports/player_advanced_metrics.csv`
 - `reports/rating_validation.json`
 - `reports/rating_coverage.json`
 - `reports/match_report.md`
@@ -145,7 +146,8 @@ The v1 model is transparent and auditable:
 - Confidence is reduced when free-data coverage is sparse.
 - Backtesting tracks exact-score top-3 hit rate, outcome accuracy, Brier score, log loss, and calibration buckets.
 - Player ratings are role-aware, stored per game, aggregated overall, and validated against external ratings when available.
-- Visual dashboards are generated from the real report outputs and include rating trends, player component charts, prediction bars, validation metrics, and leaderboards.
+- Advanced role-fit metrics track attacking involvement, progression, ball security, defensive disruption, goalkeeping value, two-way value, usage, and xG efficiency.
+- Visual dashboards are generated from the real report outputs and include rating trends, player component charts, advanced metric tables, prediction bars, validation metrics, and leaderboards.
 
 ## Player Rating Database
 

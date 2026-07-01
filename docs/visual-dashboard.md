@@ -35,7 +35,9 @@ The dashboard includes:
 - KPI cards for rated players, player-games, top overall rating, and best game rating.
 - Match prediction panel with expected goals, win/draw/loss probabilities, top scorelines, confidence, and model reasons.
 - Player cards with rating trends and role-component radar charts.
+- Player cards with role-fit and usage indicators.
 - Role distribution chart.
+- Advanced player metrics table for attack, progression, security, disruption, two-way value, usage, and xG efficiency.
 - Rating validation cards with MAE, correlation, and within-half-point rate.
 - Backtest cards with exact-score top-3 rate, outcome accuracy, log loss, and calibration buckets.
 - Overall player leaderboard.
@@ -48,4 +50,3 @@ The dashboard includes:
 - It escapes dynamic values before rendering.
 - It is responsive for desktop and mobile widths.
 - It uses inline SVG/CSS, so it works offline.
-

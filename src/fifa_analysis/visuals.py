@@ -222,15 +222,30 @@ def validation_section(validation: dict[str, Any], backtest: dict[str, Any]) -> 
 
 
 def player_cards(
-    overall_rows: list[dict[str, str]], game_rows: list[dict[str, str]], limit: int = 6
+    overall_rows: list[dict[str, str]],
+    game_rows: list[dict[str, str]],
+    advanced_rows: list[dict[str, str]],
+    limit: int = 6,
 ) -> str:
     grouped = group_player_games(game_rows)
+    advanced_grouped = group_player_games(advanced_rows)
     cards = []
     for overall in overall_rows[:limit]:
         key = (overall["player"], overall["team"])
         games = grouped.get(key, [])
+        advanced_games = advanced_grouped.get(key, [])
         trend = [number(row.get("rating")) for row in games]
         components = average_components(games)
+        average_role_fit = (
+            sum(number(row.get("role_fit_score")) for row in advanced_games) / len(advanced_games)
+            if advanced_games
+            else 0.0
+        )
+        average_usage = (
+            sum(number(row.get("usage_rate")) for row in advanced_games) / len(advanced_games)
+            if advanced_games
+            else 0.0
+        )
         cards.append(
             f"""
             <article class="player-card">
@@ -249,6 +264,8 @@ def player_cards(
                 <div><dt>Matches</dt><dd>{esc(overall.get("matches"))}</dd></div>
                 <div><dt>Minutes</dt><dd>{fmt(overall.get("minutes"), 0)}</dd></div>
                 <div><dt>Best</dt><dd>{fmt(overall.get("best_rating"))}</dd></div>
+                <div><dt>Role Fit</dt><dd>{average_role_fit:.2f}</dd></div>
+                <div><dt>Usage</dt><dd>{average_usage:.2f}</dd></div>
                 <div><dt>Confidence</dt><dd><span class="tag {confidence_class(overall.get("confidence"))}">{esc(overall.get("confidence"))}</span></dd></div>
               </dl>
             </article>
@@ -324,6 +341,38 @@ def game_table(rows: list[dict[str, str]], limit: int = 20) -> str:
       <div class="table-wrap">
         <table>
           <thead><tr><th>Player</th><th>Role</th><th>Min</th><th>Rating</th><th>Attack</th><th>Possession</th><th>Defense</th><th>GK</th></tr></thead>
+          <tbody>{''.join(body)}</tbody>
+        </table>
+      </div>
+    </section>
+    """
+
+
+def advanced_metrics_table(rows: list[dict[str, str]], limit: int = 20) -> str:
+    sorted_rows = sorted(rows, key=lambda row: number(row.get("role_fit_score")), reverse=True)
+    body = []
+    for row in sorted_rows[:limit]:
+        body.append(
+            "<tr>"
+            f"<td><strong>{esc(row.get('player'))}</strong><span>{esc(row.get('team'))} vs {esc(row.get('opponent'))}</span></td>"
+            f"<td>{esc(row.get('role_group'))}</td>"
+            f"<td>{fmt(row.get('role_fit_score'))}</td>"
+            f"<td>{fmt(row.get('attacking_involvement'))}</td>"
+            f"<td>{fmt(row.get('progression_value'))}</td>"
+            f"<td>{fmt(row.get('ball_security'))}</td>"
+            f"<td>{fmt(row.get('defensive_disruption'))}</td>"
+            f"<td>{fmt(row.get('two_way_value'))}</td>"
+            f"<td>{fmt(row.get('usage_rate'))}</td>"
+            f"<td>{fmt(row.get('xg_efficiency'))}</td>"
+            "</tr>"
+        )
+    return f"""
+    <section class="panel wide" id="advanced">
+      <p class="eyebrow">Advanced Analysis</p>
+      <h2>Role-fit and advanced player metrics</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Player</th><th>Role</th><th>Role Fit</th><th>Attack</th><th>Progression</th><th>Security</th><th>Disruption</th><th>Two-way</th><th>Usage</th><th>xG +/-</th></tr></thead>
           <tbody>{''.join(body)}</tbody>
         </table>
       </div>
@@ -562,6 +611,7 @@ def render_dashboard(
     *,
     overall_rows: list[dict[str, str]],
     game_rows: list[dict[str, str]],
+    advanced_rows: list[dict[str, str]],
     prediction: dict[str, Any],
     validation: dict[str, Any],
     backtest: dict[str, Any],
@@ -574,6 +624,7 @@ def render_dashboard(
     kpis = [
         kpi_card("Rated Players", str(len(sorted_overall)), "overall ratings in database"),
         kpi_card("Player Games", str(len(game_rows)), "per-match ratings generated"),
+        kpi_card("Advanced Rows", str(len(advanced_rows)), "role-fit metric profiles"),
         kpi_card(
             "Top Overall",
             fmt(best_player.get("weighted_rating")),
@@ -607,12 +658,13 @@ def render_dashboard(
   <main>
     <section class="kpi-row">{"".join(kpis)}</section>
     {prediction_section(prediction)}
-    {player_cards(sorted_overall, game_rows)}
+    {player_cards(sorted_overall, game_rows, advanced_rows)}
     <div class="metric-grid">
       {role_distribution(sorted_overall)}
       {validation_section(validation, backtest)}
     </div>
     {player_table(sorted_overall)}
+    {advanced_metrics_table(advanced_rows)}
     {game_table(game_rows)}
   </main>
   <footer>Generated from local FIFA analysis outputs. Ratings are model-generated and should be validated against trusted external data when available.</footer>
@@ -625,6 +677,7 @@ def generate_dashboard(
     *,
     overall_ratings_path: str | Path,
     game_ratings_path: str | Path,
+    advanced_metrics_path: str | Path,
     prediction_path: str | Path,
     validation_path: str | Path,
     backtest_path: str | Path,
@@ -636,6 +689,7 @@ def generate_dashboard(
     html_output = render_dashboard(
         overall_rows=read_csv(overall_ratings_path),
         game_rows=read_csv(game_ratings_path),
+        advanced_rows=read_csv(advanced_metrics_path),
         prediction=read_json(prediction_path),
         validation=read_json(validation_path),
         backtest=read_json(backtest_path),
@@ -643,4 +697,3 @@ def generate_dashboard(
     )
     output.write_text(html_output, encoding="utf-8")
     return output
-

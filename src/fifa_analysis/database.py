@@ -7,6 +7,7 @@ import sqlite3
 from pathlib import Path
 from typing import Iterable
 
+from fifa_analysis.advanced_metrics import AdvancedPlayerMetrics
 from fifa_analysis.ratings import PlayerGameRating, PlayerOverallRating
 from fifa_analysis.schemas import MatchRecord, PlayerMatchStats
 
@@ -86,6 +87,26 @@ CREATE TABLE IF NOT EXISTS player_game_ratings (
     defensive_score REAL NOT NULL,
     goalkeeping_score REAL NOT NULL,
     reasons_json TEXT NOT NULL,
+    PRIMARY KEY(match_id, player, team)
+);
+
+CREATE TABLE IF NOT EXISTS player_advanced_metrics (
+    match_id TEXT NOT NULL,
+    player TEXT NOT NULL,
+    team TEXT NOT NULL,
+    opponent TEXT NOT NULL,
+    role_group TEXT NOT NULL,
+    minutes REAL NOT NULL,
+    attacking_involvement REAL NOT NULL,
+    progression_value REAL NOT NULL,
+    ball_security REAL NOT NULL,
+    defensive_disruption REAL NOT NULL,
+    goalkeeping_value REAL NOT NULL,
+    two_way_value REAL NOT NULL,
+    xg_efficiency REAL NOT NULL,
+    usage_rate REAL NOT NULL,
+    role_fit_score REAL NOT NULL,
+    per90_summary_json TEXT NOT NULL,
     PRIMARY KEY(match_id, player, team)
 );
 
@@ -307,6 +328,57 @@ def upsert_game_ratings(conn: sqlite3.Connection, ratings: Iterable[PlayerGameRa
     return count
 
 
+def upsert_advanced_metrics(conn: sqlite3.Connection, metrics: Iterable[AdvancedPlayerMetrics]) -> int:
+    count = 0
+    for row in metrics:
+        conn.execute(
+            """
+            INSERT INTO player_advanced_metrics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(match_id, player, team) DO UPDATE SET
+                opponent=excluded.opponent,
+                role_group=excluded.role_group,
+                minutes=excluded.minutes,
+                attacking_involvement=excluded.attacking_involvement,
+                progression_value=excluded.progression_value,
+                ball_security=excluded.ball_security,
+                defensive_disruption=excluded.defensive_disruption,
+                goalkeeping_value=excluded.goalkeeping_value,
+                two_way_value=excluded.two_way_value,
+                xg_efficiency=excluded.xg_efficiency,
+                usage_rate=excluded.usage_rate,
+                role_fit_score=excluded.role_fit_score,
+                per90_summary_json=excluded.per90_summary_json
+            """,
+            (
+                row.match_id,
+                row.player,
+                row.team,
+                row.opponent,
+                row.role_group,
+                row.minutes,
+                row.attacking_involvement,
+                row.progression_value,
+                row.ball_security,
+                row.defensive_disruption,
+                row.goalkeeping_value,
+                row.two_way_value,
+                row.xg_efficiency,
+                row.usage_rate,
+                row.role_fit_score,
+                row.per90_summary_json,
+            ),
+        )
+        count += 1
+    return count
+
+
+def fetch_advanced_metrics(conn: sqlite3.Connection) -> list[AdvancedPlayerMetrics]:
+    rows = conn.execute(
+        "SELECT * FROM player_advanced_metrics ORDER BY role_fit_score DESC, player"
+    ).fetchall()
+    return [AdvancedPlayerMetrics(**dict(row)) for row in rows]
+
+
 def upsert_overall_ratings(conn: sqlite3.Connection, ratings: Iterable[PlayerOverallRating]) -> int:
     count = 0
     for rating in ratings:
@@ -359,4 +431,3 @@ def insert_rating_validation(
         """,
         (source, sample_size, mae, correlation, within_half_point_rate),
     )
-

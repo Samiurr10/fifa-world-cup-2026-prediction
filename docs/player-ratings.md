@@ -13,6 +13,17 @@ Ratings are bounded from `1.00` to `10.00`.
 
 The engine starts from a neutral baseline and adds role-weighted performance value. It does not use one universal formula for every position.
 
+The current rating also uses an advanced `role_fit_score` derived from:
+
+- attacking involvement
+- progression value
+- ball security
+- defensive disruption
+- goalkeeping value
+- two-way value
+- usage rate
+- xG efficiency
+
 ## Role Weighting
 
 Primary role emphasis:
@@ -77,3 +88,12 @@ Validation reports:
 - within-half-point rate
 - missing external rows
 
+## Advanced Metrics Export
+
+```bash
+PYTHONPATH=src python3 -m fifa_analysis.cli export-advanced-metrics \
+  --db data/db/worldcup_ratings.sqlite \
+  --output reports/player_advanced_metrics.csv
+```
+
+The advanced metrics table gives a deeper view than the final rating alone. It helps answer why one player rated highly: chance involvement, progression, defensive disruption, ball security, or role fit.

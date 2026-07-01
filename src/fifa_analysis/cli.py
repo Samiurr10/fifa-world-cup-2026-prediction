@@ -14,6 +14,7 @@ from fifa_analysis.connectors import (
     read_match_records,
     write_csv_rows,
 )
+from fifa_analysis.advanced_metrics import advanced_metric_to_row, calculate_many
 from fifa_analysis.evaluation import backtest_predictions
 from fifa_analysis.features import read_player_match_stats, read_team_match_stats
 from fifa_analysis.metrics import load_events, player_metrics, score_contributions, team_summary
@@ -22,11 +23,13 @@ from fifa_analysis.predictors import impact_to_rows, predict_match, prediction_t
 from fifa_analysis.database import (
     connect,
     fetch_game_ratings,
+    fetch_advanced_metrics,
     fetch_overall_ratings,
     fetch_player_stats,
     init_db,
     insert_rating_validation,
     upsert_game_ratings,
+    upsert_advanced_metrics,
     upsert_matches,
     upsert_overall_ratings,
     upsert_player_stats,
@@ -166,10 +169,15 @@ def command_rate_db(args: argparse.Namespace) -> None:
     with connect(args.db) as conn:
         player_stats_rows = fetch_player_stats(conn)
         ratings = [rate_player_game(row) for row in player_stats_rows]
+        advanced_metrics = calculate_many(player_stats_rows)
         overall = build_overall_ratings(ratings)
         game_count = upsert_game_ratings(conn, ratings)
+        advanced_count = upsert_advanced_metrics(conn, advanced_metrics)
         overall_count = upsert_overall_ratings(conn, overall)
-    print(f"Rated {game_count} player games and {overall_count} overall players in {args.db}")
+    print(
+        f"Rated {game_count} player games, {advanced_count} advanced metric rows, "
+        f"and {overall_count} overall players in {args.db}"
+    )
 
 
 def command_export_game_ratings(args: argparse.Namespace) -> None:
@@ -184,6 +192,13 @@ def command_export_overall_ratings(args: argparse.Namespace) -> None:
         rows = [overall_rating_to_row(row) for row in fetch_overall_ratings(conn)]
     write_csv_rows(args.output, rows)
     print(f"Exported {len(rows)} overall player ratings to {args.output}")
+
+
+def command_export_advanced_metrics(args: argparse.Namespace) -> None:
+    with connect(args.db) as conn:
+        rows = [advanced_metric_to_row(row) for row in fetch_advanced_metrics(conn)]
+    write_csv_rows(args.output, rows)
+    print(f"Exported {len(rows)} advanced player metric rows to {args.output}")
 
 
 def command_validate_ratings(args: argparse.Namespace) -> None:
@@ -234,6 +249,7 @@ def command_dashboard(args: argparse.Namespace) -> None:
     output = generate_dashboard(
         overall_ratings_path=args.overall_ratings,
         game_ratings_path=args.game_ratings,
+        advanced_metrics_path=args.advanced_metrics,
         prediction_path=args.prediction,
         validation_path=args.validation,
         backtest_path=args.backtest,
@@ -357,6 +373,13 @@ def build_parser() -> argparse.ArgumentParser:
     export_overall.add_argument("--output", type=Path, default=Path("reports/player_overall_ratings.csv"))
     export_overall.set_defaults(func=command_export_overall_ratings)
 
+    export_advanced = subparsers.add_parser(
+        "export-advanced-metrics", help="Export advanced player metrics from SQLite."
+    )
+    export_advanced.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    export_advanced.add_argument("--output", type=Path, default=Path("reports/player_advanced_metrics.csv"))
+    export_advanced.set_defaults(func=command_export_advanced_metrics)
+
     validate_ratings = subparsers.add_parser(
         "validate-ratings", help="Compare generated ratings against an external ratings CSV."
     )
@@ -392,6 +415,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--overall-ratings", type=Path, default=Path("reports/player_overall_ratings.csv")
     )
     dashboard.add_argument("--game-ratings", type=Path, default=Path("reports/player_game_ratings.csv"))
+    dashboard.add_argument(
+        "--advanced-metrics", type=Path, default=Path("reports/player_advanced_metrics.csv")
+    )
     dashboard.add_argument("--prediction", type=Path, default=Path("reports/match_prediction.json"))
     dashboard.add_argument("--validation", type=Path, default=Path("reports/rating_validation.json"))
     dashboard.add_argument("--backtest", type=Path, default=Path("reports/backtest.json"))

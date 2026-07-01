@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
+from fifa_analysis.advanced_metrics import calculate_advanced_metrics
 from fifa_analysis.schemas import PlayerMatchStats
 
 
@@ -149,11 +150,13 @@ ROLE_COMPONENT_WEIGHTS = {
 
 def rate_player_game(stats: PlayerMatchStats) -> PlayerGameRating:
     components = score_components(stats)
+    advanced = calculate_advanced_metrics(stats)
     weights = ROLE_COMPONENT_WEIGHTS.get(stats.role_group, ROLE_COMPONENT_WEIGHTS["unknown"])
     role_score = sum(components[key] * weight for key, weight in weights.items())
+    advanced_anchor = advanced.role_fit_score / 10.0
     minutes_factor = 0.88 + min(0.12, stats.minutes / 750.0)
     contribution_anchor = min(1.0, max(0.0, stats.contribution_score / 100.0))
-    blended = role_score * 0.74 + contribution_anchor * 0.26
+    blended = role_score * 0.58 + contribution_anchor * 0.20 + advanced_anchor * 0.22
     rating = 5.4 + (blended * 4.25 * minutes_factor)
 
     if stats.goals:
@@ -168,6 +171,7 @@ def rate_player_game(stats: PlayerMatchStats) -> PlayerGameRating:
     reasons = [
         f"{stats.role_group} weighted most toward {', '.join(weights.keys())}.",
         f"Strongest component: {dominant_component.replace('_', ' ')} {components[dominant_component]:.2f}.",
+        f"Advanced role-fit score: {advanced.role_fit_score:.2f}/10.",
     ]
     if stats.minutes < 60:
         reasons.append("Minutes reduced rating confidence.")
@@ -224,4 +228,3 @@ def game_rating_to_row(rating: PlayerGameRating) -> dict[str, object]:
 
 def overall_rating_to_row(rating: PlayerOverallRating) -> dict[str, object]:
     return asdict(rating)
-
