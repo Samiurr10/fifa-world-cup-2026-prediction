@@ -20,6 +20,7 @@ Expected result:
 - overall player ratings are generated
 - rating validation metrics are generated
 - rating coverage metrics are generated
+- the HTML visual dashboard is generated
 
 ## Individual Checks
 
@@ -30,6 +31,7 @@ make sample-impact
 make sample-report
 make sample-backtest
 make sample-ratings
+make sample-dashboard
 ```
 
 Prediction output should include:
@@ -63,3 +65,12 @@ Rating output should include:
 - role group
 - confidence
 - validation MAE/correlation when external ratings are provided
+
+Dashboard output should include:
+
+- KPI cards
+- player rating cards
+- SVG trend/radar visuals
+- prediction probability bars
+- validation and backtest panels
+- player rating tables

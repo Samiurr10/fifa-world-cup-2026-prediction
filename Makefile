@@ -1,4 +1,4 @@
-.PHONY: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-ratings sample-statsbomb verify
+.PHONY: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-ratings sample-statsbomb sample-dashboard verify
 
 test:
 	PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py'
@@ -43,4 +43,7 @@ sample-ratings:
 sample-statsbomb:
 	PYTHONPATH=src python3 -m fifa_analysis.cli statsbomb-player-stats --events data/sample/events_sample.json --lineups data/sample/statsbomb_lineups_sample.json --match-id SAMPLE-1 --home Argentina --away France --output reports/statsbomb_player_stats.csv
 
-verify: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-statsbomb sample-ratings
+sample-dashboard:
+	PYTHONPATH=src python3 -m fifa_analysis.cli dashboard --output site/index.html
+
+verify: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-statsbomb sample-ratings sample-dashboard

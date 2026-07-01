@@ -68,6 +68,18 @@ It also ranks player impact with role-specific formulas and opponent matchup adj
 
 `validation.py` compares generated ratings against external/actual ratings when those are available.
 
+## Visual Dashboard Layer
+
+`visuals.py` renders a static HTML dashboard from generated CSV/JSON outputs:
+
+- overall ratings
+- player-game ratings
+- match predictions
+- rating validation
+- backtest metrics
+
+The dashboard uses inline CSS and SVG so it can run offline without a JavaScript framework.
+
 ## Report Layer
 
 `reports.py` generates Markdown analysis from computed prediction objects. It should never invent unavailable data such as injuries, confirmed lineups, or undocumented player stats.

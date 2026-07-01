@@ -14,6 +14,7 @@ This is not a generic chatbot predictor. The project is a stats engine: data is 
 - Per-game player performance ratings.
 - Overall tournament player ratings.
 - SQLite database for matches, players, player-game stats, ratings, and validation.
+- Static visual dashboard for ratings, player trends, predictions, validation, and backtests.
 - Grounded match reports that cite model inputs and uncertainty.
 
 ## Data Sources
@@ -37,6 +38,7 @@ free data sources
   -> predictors.py xG, scorelines, outcome probabilities, player impact
   -> reports.py grounded match/player explanation
   -> database.py stores player stats, game ratings, overall ratings, validation
+  -> visuals.py renders clean HTML/SVG dashboards
   -> cli.py repeatable command-line workflows
 ```
 
@@ -59,6 +61,7 @@ This runs unit tests and generates:
 - `reports/rating_coverage.json`
 - `reports/match_report.md`
 - `reports/backtest.json`
+- `site/index.html`
 
 ## Main Commands
 
@@ -111,6 +114,18 @@ make sample-ratings
 
 This creates `data/db/sample_worldcup_ratings.sqlite`, loads sample player-game stats, computes game ratings, computes overall ratings, validates against sample external ratings, and exports CSV/JSON reports.
 
+Generate the visual dashboard:
+
+```bash
+make sample-dashboard
+```
+
+Then open:
+
+```text
+site/index.html
+```
+
 Normalize an openfootball-style JSON file:
 
 ```bash
@@ -130,6 +145,7 @@ The v1 model is transparent and auditable:
 - Confidence is reduced when free-data coverage is sparse.
 - Backtesting tracks exact-score top-3 hit rate, outcome accuracy, Brier score, log loss, and calibration buckets.
 - Player ratings are role-aware, stored per game, aggregated overall, and validated against external ratings when available.
+- Visual dashboards are generated from the real report outputs and include rating trends, player component charts, prediction bars, validation metrics, and leaderboards.
 
 ## Player Rating Database
 
@@ -143,6 +159,12 @@ The rating database stores:
 - validation summaries
 
 See [docs/database.md](docs/database.md) and [docs/player-ratings.md](docs/player-ratings.md).
+
+## Visual Dashboard
+
+The dashboard is a self-contained HTML file with inline CSS/SVG visuals. It can be opened directly or published later with GitHub Pages.
+
+See [docs/visual-dashboard.md](docs/visual-dashboard.md).
 
 ## Accuracy Notes
 

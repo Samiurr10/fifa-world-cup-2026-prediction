@@ -40,6 +40,7 @@ from fifa_analysis.ratings import (
 from fifa_analysis.reports import generate_match_report
 from fifa_analysis.statsbomb import statsbomb_files_to_player_stats
 from fifa_analysis.validation import compare_external_ratings, rating_coverage, read_external_ratings
+from fifa_analysis.visuals import generate_dashboard
 
 
 def command_metrics(args: argparse.Namespace) -> None:
@@ -229,6 +230,19 @@ def command_statsbomb_player_stats(args: argparse.Namespace) -> None:
     print(f"Wrote {len(rows)} StatsBomb-normalized player stat rows to {args.output}")
 
 
+def command_dashboard(args: argparse.Namespace) -> None:
+    output = generate_dashboard(
+        overall_ratings_path=args.overall_ratings,
+        game_ratings_path=args.game_ratings,
+        prediction_path=args.prediction,
+        validation_path=args.validation,
+        backtest_path=args.backtest,
+        output_path=args.output,
+        title=args.title,
+    )
+    print(f"Wrote visual dashboard to {output}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="FIFA World Cup player contribution and prediction analysis."
@@ -370,6 +384,20 @@ def build_parser() -> argparse.ArgumentParser:
     statsbomb_stats.add_argument("--away", required=True)
     statsbomb_stats.add_argument("--output", type=Path, default=Path("reports/statsbomb_player_stats.csv"))
     statsbomb_stats.set_defaults(func=command_statsbomb_player_stats)
+
+    dashboard = subparsers.add_parser(
+        "dashboard", help="Generate a self-contained HTML performance dashboard."
+    )
+    dashboard.add_argument(
+        "--overall-ratings", type=Path, default=Path("reports/player_overall_ratings.csv")
+    )
+    dashboard.add_argument("--game-ratings", type=Path, default=Path("reports/player_game_ratings.csv"))
+    dashboard.add_argument("--prediction", type=Path, default=Path("reports/match_prediction.json"))
+    dashboard.add_argument("--validation", type=Path, default=Path("reports/rating_validation.json"))
+    dashboard.add_argument("--backtest", type=Path, default=Path("reports/backtest.json"))
+    dashboard.add_argument("--output", type=Path, default=Path("site/index.html"))
+    dashboard.add_argument("--title", default="FIFA World Cup 2026 Performance Dashboard")
+    dashboard.set_defaults(func=command_dashboard)
 
     return parser
 
