@@ -250,6 +250,23 @@ def fetch_player_stats(conn: sqlite3.Connection) -> list[PlayerMatchStats]:
     return [PlayerMatchStats(**dict(row)) for row in rows]
 
 
+def fetch_game_ratings(conn: sqlite3.Connection) -> list[PlayerGameRating]:
+    rows = conn.execute("SELECT * FROM player_game_ratings ORDER BY match_id, team, player").fetchall()
+    ratings: list[PlayerGameRating] = []
+    for row in rows:
+        payload = dict(row)
+        payload["reasons"] = json.loads(payload.pop("reasons_json"))
+        ratings.append(PlayerGameRating(**payload))
+    return ratings
+
+
+def fetch_overall_ratings(conn: sqlite3.Connection) -> list[PlayerOverallRating]:
+    rows = conn.execute(
+        "SELECT * FROM player_overall_ratings ORDER BY weighted_rating DESC, minutes DESC"
+    ).fetchall()
+    return [PlayerOverallRating(**dict(row)) for row in rows]
+
+
 def upsert_game_ratings(conn: sqlite3.Connection, ratings: Iterable[PlayerGameRating]) -> int:
     count = 0
     for rating in ratings:
@@ -325,4 +342,21 @@ def upsert_overall_ratings(conn: sqlite3.Connection, ratings: Iterable[PlayerOve
 
 def table_count(conn: sqlite3.Connection, table: str) -> int:
     return int(conn.execute(f"SELECT COUNT(*) AS count FROM {table}").fetchone()["count"])
+
+
+def insert_rating_validation(
+    conn: sqlite3.Connection,
+    source: str,
+    sample_size: int,
+    mae: float | None,
+    correlation: float | None,
+    within_half_point_rate: float | None,
+) -> None:
+    conn.execute(
+        """
+        INSERT INTO rating_validation(source, sample_size, mae, correlation, within_half_point_rate)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (source, sample_size, mae, correlation, within_half_point_rate),
+    )
 

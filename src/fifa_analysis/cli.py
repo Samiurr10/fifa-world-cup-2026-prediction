@@ -19,7 +19,26 @@ from fifa_analysis.features import read_player_match_stats, read_team_match_stat
 from fifa_analysis.metrics import load_events, player_metrics, score_contributions, team_summary
 from fifa_analysis.models import baseline_match_prediction, evaluate_baseline
 from fifa_analysis.predictors import impact_to_rows, predict_match, prediction_to_dict, rank_player_impact
+from fifa_analysis.database import (
+    connect,
+    fetch_game_ratings,
+    fetch_overall_ratings,
+    fetch_player_stats,
+    init_db,
+    insert_rating_validation,
+    upsert_game_ratings,
+    upsert_matches,
+    upsert_overall_ratings,
+    upsert_player_stats,
+)
+from fifa_analysis.ratings import (
+    build_overall_ratings,
+    game_rating_to_row,
+    overall_rating_to_row,
+    rate_player_game,
+)
 from fifa_analysis.reports import generate_match_report
+from fifa_analysis.validation import compare_external_ratings, rating_coverage, read_external_ratings
 
 
 def command_metrics(args: argparse.Namespace) -> None:
@@ -119,6 +138,84 @@ def command_backtest(args: argparse.Namespace) -> None:
         print(json.dumps(result, indent=2))
 
 
+def command_init_db(args: argparse.Namespace) -> None:
+    init_db(args.db)
+    print(f"Initialized rating database at {args.db}")
+
+
+def command_load_matches(args: argparse.Namespace) -> None:
+    init_db(args.db)
+    matches = read_match_records(args.matches)
+    with connect(args.db) as conn:
+        count = upsert_matches(conn, matches)
+    print(f"Loaded {count} matches into {args.db}")
+
+
+def command_load_player_stats(args: argparse.Namespace) -> None:
+    init_db(args.db)
+    rows = read_player_match_stats(args.player_stats)
+    with connect(args.db) as conn:
+        count = upsert_player_stats(conn, rows)
+    print(f"Loaded {count} player-game stat rows into {args.db}")
+
+
+def command_rate_db(args: argparse.Namespace) -> None:
+    init_db(args.db)
+    with connect(args.db) as conn:
+        player_stats_rows = fetch_player_stats(conn)
+        ratings = [rate_player_game(row) for row in player_stats_rows]
+        overall = build_overall_ratings(ratings)
+        game_count = upsert_game_ratings(conn, ratings)
+        overall_count = upsert_overall_ratings(conn, overall)
+    print(f"Rated {game_count} player games and {overall_count} overall players in {args.db}")
+
+
+def command_export_game_ratings(args: argparse.Namespace) -> None:
+    with connect(args.db) as conn:
+        rows = [game_rating_to_row(row) for row in fetch_game_ratings(conn)]
+    write_csv_rows(args.output, rows)
+    print(f"Exported {len(rows)} player-game ratings to {args.output}")
+
+
+def command_export_overall_ratings(args: argparse.Namespace) -> None:
+    with connect(args.db) as conn:
+        rows = [overall_rating_to_row(row) for row in fetch_overall_ratings(conn)]
+    write_csv_rows(args.output, rows)
+    print(f"Exported {len(rows)} overall player ratings to {args.output}")
+
+
+def command_validate_ratings(args: argparse.Namespace) -> None:
+    with connect(args.db) as conn:
+        generated = fetch_game_ratings(conn)
+        result = compare_external_ratings(generated, read_external_ratings(args.external_ratings))
+        if args.store:
+            insert_rating_validation(
+                conn,
+                source=str(args.external_ratings),
+                sample_size=int(result["sample_size"]),
+                mae=result["mae"],
+                correlation=result["correlation"],
+                within_half_point_rate=result["within_half_point_rate"],
+            )
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        print(f"Wrote rating validation metrics to {args.output}")
+    else:
+        print(json.dumps(result, indent=2))
+
+
+def command_rating_coverage(args: argparse.Namespace) -> None:
+    with connect(args.db) as conn:
+        result = rating_coverage(fetch_game_ratings(conn))
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        print(f"Wrote rating coverage report to {args.output}")
+    else:
+        print(json.dumps(result, indent=2))
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="FIFA World Cup player contribution and prediction analysis."
@@ -198,6 +295,56 @@ def build_parser() -> argparse.ArgumentParser:
     backtest.add_argument("--team-stats", type=Path, required=True)
     backtest.add_argument("--output", type=Path)
     backtest.set_defaults(func=command_backtest)
+
+    init_database = subparsers.add_parser("init-db", help="Create the SQLite rating database.")
+    init_database.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    init_database.set_defaults(func=command_init_db)
+
+    load_matches = subparsers.add_parser("load-matches", help="Load normalized matches into SQLite.")
+    load_matches.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    load_matches.add_argument("--matches", type=Path, required=True)
+    load_matches.set_defaults(func=command_load_matches)
+
+    load_player_stats = subparsers.add_parser(
+        "load-player-stats", help="Load player-game stat rows into SQLite."
+    )
+    load_player_stats.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    load_player_stats.add_argument("--player-stats", type=Path, required=True)
+    load_player_stats.set_defaults(func=command_load_player_stats)
+
+    rate_db = subparsers.add_parser("rate-db", help="Compute player game and overall ratings.")
+    rate_db.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    rate_db.set_defaults(func=command_rate_db)
+
+    export_game = subparsers.add_parser(
+        "export-game-ratings", help="Export player-game ratings from SQLite."
+    )
+    export_game.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    export_game.add_argument("--output", type=Path, default=Path("reports/player_game_ratings.csv"))
+    export_game.set_defaults(func=command_export_game_ratings)
+
+    export_overall = subparsers.add_parser(
+        "export-overall-ratings", help="Export overall player ratings from SQLite."
+    )
+    export_overall.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    export_overall.add_argument("--output", type=Path, default=Path("reports/player_overall_ratings.csv"))
+    export_overall.set_defaults(func=command_export_overall_ratings)
+
+    validate_ratings = subparsers.add_parser(
+        "validate-ratings", help="Compare generated ratings against an external ratings CSV."
+    )
+    validate_ratings.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    validate_ratings.add_argument("--external-ratings", type=Path, required=True)
+    validate_ratings.add_argument("--output", type=Path)
+    validate_ratings.add_argument("--store", action="store_true")
+    validate_ratings.set_defaults(func=command_validate_ratings)
+
+    coverage = subparsers.add_parser(
+        "rating-coverage", help="Summarize how many player-games and players are rated."
+    )
+    coverage.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
+    coverage.add_argument("--output", type=Path)
+    coverage.set_defaults(func=command_rating_coverage)
 
     return parser
 

@@ -1,0 +1,12 @@
+match_id,player,team,external_rating,source
+ARG-1,Lionel Messi,Argentina,8.8,sample_external
+ARG-2,Lionel Messi,Argentina,8.4,sample_external
+ARG-3,Lionel Messi,Argentina,8.5,sample_external
+ARG-4,Lionel Messi,Argentina,7.8,sample_external
+ARG-5,Lionel Messi,Argentina,8.3,sample_external
+FRA-1,Kylian Mbappe,France,8.7,sample_external
+FRA-2,Kylian Mbappe,France,8.1,sample_external
+FRA-3,Kylian Mbappe,France,9.2,sample_external
+FRA-4,Kylian Mbappe,France,8.8,sample_external
+FRA-5,Kylian Mbappe,France,7.5,sample_external
+

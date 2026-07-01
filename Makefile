@@ -1,4 +1,4 @@
-.PHONY: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest verify
+.PHONY: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-ratings verify
 
 test:
 	PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py'
@@ -30,4 +30,14 @@ sample-report:
 sample-backtest:
 	PYTHONPATH=src python3 -m fifa_analysis.cli backtest --matches data/sample/matches_sample.csv --team-stats data/sample/team_match_stats_sample.csv --output reports/backtest.json
 
-verify: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest
+sample-ratings:
+	rm -f data/db/sample_worldcup_ratings.sqlite
+	PYTHONPATH=src python3 -m fifa_analysis.cli init-db --db data/db/sample_worldcup_ratings.sqlite
+	PYTHONPATH=src python3 -m fifa_analysis.cli load-player-stats --db data/db/sample_worldcup_ratings.sqlite --player-stats data/sample/player_match_stats_sample.csv
+	PYTHONPATH=src python3 -m fifa_analysis.cli rate-db --db data/db/sample_worldcup_ratings.sqlite
+	PYTHONPATH=src python3 -m fifa_analysis.cli export-game-ratings --db data/db/sample_worldcup_ratings.sqlite --output reports/player_game_ratings.csv
+	PYTHONPATH=src python3 -m fifa_analysis.cli export-overall-ratings --db data/db/sample_worldcup_ratings.sqlite --output reports/player_overall_ratings.csv
+	PYTHONPATH=src python3 -m fifa_analysis.cli validate-ratings --db data/db/sample_worldcup_ratings.sqlite --external-ratings data/sample/external_ratings_sample.csv --output reports/rating_validation.json --store
+	PYTHONPATH=src python3 -m fifa_analysis.cli rating-coverage --db data/db/sample_worldcup_ratings.sqlite --output reports/rating_coverage.json
+
+verify: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-ratings
