@@ -1,0 +1,5 @@
+match_id,date,home_team,away_team,home_goals,away_goals,status,stage,group,source
+BT-1,2026-06-16,Argentina,France,2,1,finished,Knockout,,sample
+BT-2,2026-06-21,France,Argentina,1,1,finished,Group,,sample
+BT-3,2026-06-26,Argentina,France,1,0,finished,Group,,sample
+

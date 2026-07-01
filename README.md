@@ -1,0 +1,119 @@
+# FIFA World Cup 2026 Prediction And Player Impact Engine
+
+Free-data-first football intelligence system for predicting exact scorelines, win/draw/loss probabilities, and role-aware player impact for FIFA World Cup 2026 matches.
+
+This is not a generic chatbot predictor. The project is a stats engine: data is normalized, features are computed, scorelines are modeled, and AI-style reports only explain computed facts.
+
+## What It Produces
+
+- Expected goals for both teams.
+- Top likely exact scorelines.
+- Win/draw/loss probabilities.
+- Confidence tier based on free-data coverage.
+- Role-aware player impact rankings.
+- Grounded match reports that cite model inputs and uncertainty.
+
+## Data Sources
+
+Primary free sources:
+
+- [StatsBomb Open Data](https://github.com/statsbomb/open-data): event-level football data with competitions, matches, events, lineups, and selected 360 files.
+- [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json): public-domain World Cup JSON data, including a 2026 folder.
+- [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026): no-key 2026 World Cup API candidate with matches, teams, groups, standings, scores, and stadiums.
+- [football-data.org](https://www.football-data.org/documentation/api): backup fixture/result API; requires an API token.
+
+Kaggle datasets can be added as local CSV inputs after checking columns and license terms.
+
+## Architecture
+
+```text
+free data sources
+  -> connectors.py normalize source payloads
+  -> schemas.py shared match/team/player records
+  -> features.py team form, opponent weakness, player role form
+  -> predictors.py xG, scorelines, outcome probabilities, player impact
+  -> reports.py grounded match/player explanation
+  -> cli.py repeatable command-line workflows
+```
+
+## Quick Verification
+
+```bash
+make verify
+```
+
+This runs unit tests and generates:
+
+- `reports/player_metrics.csv`
+- `reports/team_summary.csv`
+- `reports/matches.csv`
+- `reports/match_prediction.json`
+- `reports/player_impact.csv`
+- `reports/match_report.md`
+- `reports/backtest.json`
+
+## Main Commands
+
+Predict Argentina vs France from sample team stats:
+
+```bash
+PYTHONPATH=src python3 -m fifa_analysis.cli predict-match \
+  --home Argentina \
+  --away France \
+  --team-stats data/sample/team_match_stats_sample.csv \
+  --output reports/match_prediction.json
+```
+
+Rank France player impact against Argentina:
+
+```bash
+PYTHONPATH=src python3 -m fifa_analysis.cli player-impact \
+  --team France \
+  --opponent Argentina \
+  --team-stats data/sample/team_match_stats_sample.csv \
+  --player-stats data/sample/player_match_stats_sample.csv \
+  --output reports/player_impact.csv
+```
+
+Generate a grounded report:
+
+```bash
+PYTHONPATH=src python3 -m fifa_analysis.cli match-report \
+  --home Argentina \
+  --away France \
+  --team-stats data/sample/team_match_stats_sample.csv \
+  --player-stats data/sample/player_match_stats_sample.csv \
+  --output reports/match_report.md
+```
+
+Backtest scoreline and outcome predictions:
+
+```bash
+PYTHONPATH=src python3 -m fifa_analysis.cli backtest \
+  --matches data/sample/matches_sample.csv \
+  --team-stats data/sample/team_match_stats_sample.csv \
+  --output reports/backtest.json
+```
+
+Normalize an openfootball-style JSON file:
+
+```bash
+PYTHONPATH=src python3 -m fifa_analysis.cli ingest-openfootball \
+  --input data/sample/openfootball_sample.json \
+  --output reports/matches.csv
+```
+
+## Model Design
+
+The v1 model is transparent and auditable:
+
+- Team expected goals are estimated from recent weighted xG, goals, shots, goals conceded, xG conceded, shots allowed, form, and host advantage.
+- Exact scorelines use a Poisson distribution over each team’s expected goals.
+- Win/draw/loss probabilities are summed from the scoreline distribution.
+- Player impact combines role-specific form, contribution score, minutes adjustment, and opponent matchup weakness.
+- Confidence is reduced when free-data coverage is sparse.
+- Backtesting tracks exact-score top-3 hit rate, outcome accuracy, Brier score, log loss, and calibration buckets.
+
+## Accuracy Notes
+
+Free data will not always include confirmed lineups, injuries, or current player-level stats. The system handles that by lowering confidence instead of pretending unavailable information is known. Paid APIs can be added later behind the same normalized schemas.

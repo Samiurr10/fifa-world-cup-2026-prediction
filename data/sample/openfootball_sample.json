@@ -1,0 +1,19 @@
+{
+  "name": "World Cup 2026 Sample",
+  "rounds": [
+    {
+      "name": "Group A",
+      "matches": [
+        {
+          "num": 1,
+          "date": "2026-06-11",
+          "team1": {"name": "Mexico"},
+          "team2": {"name": "South Africa"},
+          "score": {"ft": {"team1": 2, "team2": 1}},
+          "group": "A"
+        }
+      ]
+    }
+  ]
+}
+

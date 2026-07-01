@@ -1,0 +1,80 @@
+[
+  {
+    "type": {"name": "Carry"},
+    "player": {"name": "Lionel Messi"},
+    "team": {"name": "Argentina"},
+    "position": {"name": "Center Attacking Midfield"},
+    "location": [48, 39],
+    "carry": {"end_location": [66, 35]}
+  },
+  {
+    "type": {"name": "Pass"},
+    "player": {"name": "Lionel Messi"},
+    "team": {"name": "Argentina"},
+    "position": {"name": "Center Attacking Midfield"},
+    "location": [68, 35],
+    "pass": {"end_location": [94, 31], "shot_assist": true}
+  },
+  {
+    "type": {"name": "Shot"},
+    "player": {"name": "Julian Alvarez"},
+    "team": {"name": "Argentina"},
+    "position": {"name": "Center Forward"},
+    "location": [103, 39],
+    "shot": {"statsbomb_xg": 0.32, "outcome": {"name": "Goal"}}
+  },
+  {
+    "type": {"name": "Interception"},
+    "player": {"name": "Enzo Fernandez"},
+    "team": {"name": "Argentina"},
+    "position": {"name": "Center Midfield"},
+    "location": [54, 43]
+  },
+  {
+    "type": {"name": "Ball Recovery"},
+    "player": {"name": "Nicolas Otamendi"},
+    "team": {"name": "Argentina"},
+    "position": {"name": "Center Back"},
+    "location": [36, 42]
+  },
+  {
+    "type": {"name": "Carry"},
+    "player": {"name": "Kylian Mbappe"},
+    "team": {"name": "France"},
+    "position": {"name": "Left Wing"},
+    "location": [57, 21],
+    "carry": {"end_location": [76, 18]}
+  },
+  {
+    "type": {"name": "Dribble"},
+    "player": {"name": "Kylian Mbappe"},
+    "team": {"name": "France"},
+    "position": {"name": "Left Wing"},
+    "location": [78, 18],
+    "dribble": {"outcome": {"name": "Complete"}}
+  },
+  {
+    "type": {"name": "Shot"},
+    "player": {"name": "Kylian Mbappe"},
+    "team": {"name": "France"},
+    "position": {"name": "Left Wing"},
+    "location": [100, 28],
+    "shot": {"statsbomb_xg": 0.18, "outcome": {"name": "Saved"}}
+  },
+  {
+    "type": {"name": "Pressure"},
+    "player": {"name": "Aurelien Tchouameni"},
+    "team": {"name": "France"},
+    "position": {"name": "Center Defensive Midfield"},
+    "location": [62, 41]
+  },
+  {
+    "type": {"name": "Pass"},
+    "player": {"name": "Antoine Griezmann"},
+    "team": {"name": "France"},
+    "position": {"name": "Center Attacking Midfield"},
+    "location": [61, 33],
+    "pass": {"end_location": [75, 26], "shot_assist": true}
+  }
+]
+

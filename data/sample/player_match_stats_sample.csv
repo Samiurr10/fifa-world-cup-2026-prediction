@@ -1,0 +1,18 @@
+match_id,player,team,opponent,position,role_group,minutes,goals,assists,xg,shots,progressive_passes,progressive_carries,carries,successful_dribbles,interceptions,tackles,clearances,aerials_won,pressures,ball_recoveries,saves,claims,pass_completion_pct,chance_creation,contribution_score,source
+ARG-1,Lionel Messi,Argentina,Algeria,Center Attacking Midfield,attacking_midfielder,84,1,1,0.45,3,8,5,9,2,0,1,0,0,5,2,0,0,86,4,88,sample
+ARG-2,Lionel Messi,Argentina,Austria,Center Attacking Midfield,attacking_midfielder,78,0,2,0.22,2,9,4,7,2,1,0,0,0,4,1,0,0,89,5,86,sample
+ARG-3,Lionel Messi,Argentina,Jordan,Center Attacking Midfield,attacking_midfielder,80,1,0,0.37,4,6,6,10,3,0,0,0,0,3,1,0,0,84,3,84,sample
+ARG-4,Lionel Messi,Argentina,Senegal,Center Attacking Midfield,attacking_midfielder,90,0,1,0.18,2,7,3,6,1,1,1,0,0,6,2,0,0,87,3,80,sample
+ARG-5,Lionel Messi,Argentina,Norway,Center Attacking Midfield,attacking_midfielder,82,1,0,0.31,3,8,4,8,2,0,0,0,0,4,1,0,0,85,4,85,sample
+ARG-1,Julian Alvarez,Argentina,Algeria,Center Forward,forward,74,1,0,0.62,4,1,1,3,0,0,1,0,1,8,1,0,0,77,1,79,sample
+ARG-2,Julian Alvarez,Argentina,Austria,Center Forward,forward,76,1,0,0.48,3,2,1,2,0,0,0,0,0,7,1,0,0,74,1,75,sample
+ARG-3,Enzo Fernandez,Argentina,Jordan,Center Midfield,central_midfielder,90,0,0,0.04,1,10,2,4,0,3,2,1,1,6,7,0,0,91,2,72,sample
+ARG-5,Nicolas Otamendi,Argentina,Norway,Center Back,center_back,90,0,0,0.02,1,5,0,1,0,3,2,8,4,1,5,0,0,88,0,70,sample
+FRA-1,Kylian Mbappe,France,Senegal,Left Wing,winger,90,1,0,0.55,5,2,7,12,4,0,0,0,0,6,1,0,0,78,3,87,sample
+FRA-2,Kylian Mbappe,France,Norway,Left Wing,winger,90,0,1,0.28,3,3,6,11,3,0,0,0,0,5,1,0,0,80,4,82,sample
+FRA-3,Kylian Mbappe,France,Iraq,Left Wing,winger,76,2,0,0.74,6,2,8,13,5,0,0,0,0,4,0,0,0,76,2,91,sample
+FRA-4,Kylian Mbappe,France,Austria,Left Wing,winger,82,1,1,0.49,4,4,7,12,4,0,1,0,0,6,1,0,0,79,4,89,sample
+FRA-5,Kylian Mbappe,France,Brazil,Left Wing,winger,90,0,0,0.20,2,2,4,8,2,1,0,0,0,7,1,0,0,81,2,75,sample
+FRA-3,Antoine Griezmann,France,Iraq,Center Attacking Midfield,attacking_midfielder,88,0,2,0.12,1,9,2,5,1,2,1,0,0,7,3,0,0,90,5,84,sample
+FRA-4,Aurelien Tchouameni,France,Austria,Center Defensive Midfield,defensive_midfielder,90,0,0,0.03,1,7,1,2,0,4,3,2,2,5,8,0,0,92,1,76,sample
+

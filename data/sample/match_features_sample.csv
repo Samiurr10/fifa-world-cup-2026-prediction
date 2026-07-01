@@ -1,0 +1,6 @@
+home_attack,home_defense,away_attack,away_defense,home_advantage,result
+1.8,1.1,1.2,0.9,0.18,H
+1.0,0.8,1.0,0.8,0.00,D
+0.9,0.7,1.6,1.2,0.00,A
+1.4,1.0,1.2,1.0,0.18,H
+

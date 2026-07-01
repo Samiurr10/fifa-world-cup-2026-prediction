@@ -1,0 +1,33 @@
+[project]
+name = "fifa-world-cup-analysis"
+version = "0.1.0"
+description = "Free-data-first FIFA World Cup 2026 scoreline prediction and player-impact engine."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Samiur Rahman" }]
+dependencies = []
+
+[project.optional-dependencies]
+ml = [
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "scikit-learn>=1.5",
+  "matplotlib>=3.9",
+  "jupyter>=1.0",
+  "statsbombpy>=1.20",
+]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[project.scripts]
+fifa-analysis = "fifa_analysis.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
