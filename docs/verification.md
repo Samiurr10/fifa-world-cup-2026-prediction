@@ -16,6 +16,10 @@ Expected result:
 - player impact CSV is generated
 - grounded match report is generated
 - backtest metrics JSON is generated
+- player-game ratings are generated
+- overall player ratings are generated
+- rating validation metrics are generated
+- rating coverage metrics are generated
 
 ## Individual Checks
 
@@ -25,6 +29,7 @@ make sample-match
 make sample-impact
 make sample-report
 make sample-backtest
+make sample-ratings
 ```
 
 Prediction output should include:
@@ -50,3 +55,11 @@ Backtest output should include:
 - Brier score
 - log loss
 - calibration buckets
+
+Rating output should include:
+
+- per-game `1-10` rating
+- overall weighted rating
+- role group
+- confidence
+- validation MAE/correlation when external ratings are provided

@@ -11,6 +11,9 @@ This is not a generic chatbot predictor. The project is a stats engine: data is 
 - Win/draw/loss probabilities.
 - Confidence tier based on free-data coverage.
 - Role-aware player impact rankings.
+- Per-game player performance ratings.
+- Overall tournament player ratings.
+- SQLite database for matches, players, player-game stats, ratings, and validation.
 - Grounded match reports that cite model inputs and uncertainty.
 
 ## Data Sources
@@ -33,6 +36,7 @@ free data sources
   -> features.py team form, opponent weakness, player role form
   -> predictors.py xG, scorelines, outcome probabilities, player impact
   -> reports.py grounded match/player explanation
+  -> database.py stores player stats, game ratings, overall ratings, validation
   -> cli.py repeatable command-line workflows
 ```
 
@@ -49,6 +53,10 @@ This runs unit tests and generates:
 - `reports/matches.csv`
 - `reports/match_prediction.json`
 - `reports/player_impact.csv`
+- `reports/player_game_ratings.csv`
+- `reports/player_overall_ratings.csv`
+- `reports/rating_validation.json`
+- `reports/rating_coverage.json`
 - `reports/match_report.md`
 - `reports/backtest.json`
 
@@ -95,6 +103,14 @@ PYTHONPATH=src python3 -m fifa_analysis.cli backtest \
   --output reports/backtest.json
 ```
 
+Build the SQLite player-rating database:
+
+```bash
+make sample-ratings
+```
+
+This creates `data/db/sample_worldcup_ratings.sqlite`, loads sample player-game stats, computes game ratings, computes overall ratings, validates against sample external ratings, and exports CSV/JSON reports.
+
 Normalize an openfootball-style JSON file:
 
 ```bash
@@ -113,7 +129,21 @@ The v1 model is transparent and auditable:
 - Player impact combines role-specific form, contribution score, minutes adjustment, and opponent matchup weakness.
 - Confidence is reduced when free-data coverage is sparse.
 - Backtesting tracks exact-score top-3 hit rate, outcome accuracy, Brier score, log loss, and calibration buckets.
+- Player ratings are role-aware, stored per game, aggregated overall, and validated against external ratings when available.
+
+## Player Rating Database
+
+The rating database stores:
+
+- players
+- matches
+- player-game stats
+- per-game ratings
+- overall ratings
+- validation summaries
+
+See [docs/database.md](docs/database.md) and [docs/player-ratings.md](docs/player-ratings.md).
 
 ## Accuracy Notes
 
-Free data will not always include confirmed lineups, injuries, or current player-level stats. The system handles that by lowering confidence instead of pretending unavailable information is known. Paid APIs can be added later behind the same normalized schemas.
+Free data will not always include confirmed lineups, injuries, current player-level stats, or external player ratings. The system handles that by lowering confidence, exposing coverage reports, and validating only against rating sources that are actually provided. Paid APIs or Kaggle exports can be added later behind the same normalized schemas.
