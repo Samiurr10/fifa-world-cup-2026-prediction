@@ -1,11 +1,10 @@
-"""Static visual dashboard generation for player ratings and predictions."""
+"""Interactive static dashboard generation for player/team analysis."""
 
 from __future__ import annotations
 
 import csv
 import html
 import json
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -30,619 +29,14 @@ def esc(value: object) -> str:
     return html.escape(str(value), quote=True)
 
 
-def number(value: object, default: float = 0.0) -> float:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def fmt(value: object, digits: int = 2) -> str:
-    return f"{number(value):.{digits}f}"
-
-
-def pct(value: object) -> str:
-    return f"{number(value) * 100:.1f}%"
-
-
-def confidence_class(value: object) -> str:
-    text = str(value).lower()
-    if text == "high":
-        return "good"
-    if text == "medium":
-        return "warn"
-    return "risk"
-
-
-def bar(label: str, value: float, maximum: float, class_name: str = "") -> str:
-    width = 0 if maximum <= 0 else max(0, min(100, value / maximum * 100))
+def safe_json(data: object) -> str:
     return (
-        f'<div class="bar-row {esc(class_name)}">'
-        f'<span>{esc(label)}</span>'
-        f'<div class="bar-track"><i style="width:{width:.1f}%"></i></div>'
-        f"<strong>{value:.2f}</strong>"
-        "</div>"
+        json.dumps(data, ensure_ascii=False)
+        .replace("&", "\\u0026")
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("</", "<\\/")
     )
-
-
-def sparkline(values: list[float], width: int = 170, height: int = 44) -> str:
-    if not values:
-        return f'<svg class="sparkline" viewBox="0 0 {width} {height}" aria-label="No trend"></svg>'
-    min_value = min(values)
-    max_value = max(values)
-    span = max(max_value - min_value, 0.01)
-    if len(values) == 1:
-        points = f"{width / 2:.1f},{height / 2:.1f}"
-    else:
-        points = " ".join(
-            f"{index * (width / (len(values) - 1)):.1f},"
-            f"{height - ((value - min_value) / span * (height - 8)) - 4:.1f}"
-            for index, value in enumerate(values)
-        )
-    return (
-        f'<svg class="sparkline" viewBox="0 0 {width} {height}" role="img" '
-        f'aria-label="Rating trend">'
-        f'<polyline points="{points}" fill="none" stroke="currentColor" stroke-width="3" '
-        f'stroke-linecap="round" stroke-linejoin="round"></polyline>'
-        "</svg>"
-    )
-
-
-def radar(components: dict[str, float], size: int = 138) -> str:
-    labels = ["attacking", "possession", "defensive", "goalkeeping"]
-    values = [
-        number(components.get("attacking_score")),
-        number(components.get("possession_score")),
-        number(components.get("defensive_score")),
-        number(components.get("goalkeeping_score")),
-    ]
-    center = size / 2
-    radius = size * 0.38
-    points = []
-    axes = []
-    for index, value in enumerate(values):
-        angle = -1.5708 + index * 1.5708
-        axis_x = center + radius * __import__("math").cos(angle)
-        axis_y = center + radius * __import__("math").sin(angle)
-        point_x = center + radius * max(0, min(1, value)) * __import__("math").cos(angle)
-        point_y = center + radius * max(0, min(1, value)) * __import__("math").sin(angle)
-        axes.append(
-            f'<line x1="{center:.1f}" y1="{center:.1f}" x2="{axis_x:.1f}" y2="{axis_y:.1f}"></line>'
-        )
-        points.append(f"{point_x:.1f},{point_y:.1f}")
-    label_markup = "".join(
-        f'<span class="radar-label radar-label-{index}">{esc(label)}</span>'
-        for index, label in enumerate(labels)
-    )
-    return (
-        '<div class="radar-wrap">'
-        f'<svg class="radar" viewBox="0 0 {size} {size}" role="img" '
-        f'aria-label="Role component radar">'
-        f'<circle cx="{center:.1f}" cy="{center:.1f}" r="{radius:.1f}"></circle>'
-        f'{"".join(axes)}'
-        f'<polygon points="{" ".join(points)}"></polygon>'
-        "</svg>"
-        f"{label_markup}</div>"
-    )
-
-
-def average_components(rows: list[dict[str, str]]) -> dict[str, float]:
-    if not rows:
-        return {}
-    fields = ["attacking_score", "possession_score", "defensive_score", "goalkeeping_score"]
-    return {field: sum(number(row.get(field)) for row in rows) / len(rows) for field in fields}
-
-
-def group_player_games(rows: list[dict[str, str]]) -> dict[tuple[str, str], list[dict[str, str]]]:
-    grouped: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
-    for row in rows:
-        grouped[(row["player"], row["team"])].append(row)
-    return grouped
-
-
-def kpi_card(label: str, value: str, detail: str, class_name: str = "") -> str:
-    return (
-        f'<section class="kpi {esc(class_name)}">'
-        f"<span>{esc(label)}</span>"
-        f"<strong>{esc(value)}</strong>"
-        f"<small>{esc(detail)}</small>"
-        "</section>"
-    )
-
-
-def data_quality_banner(overall_rows: list[dict[str, str]], game_rows: list[dict[str, str]]) -> str:
-    players = [row.get("player", "") for row in overall_rows + game_rows]
-    if any(player.startswith("Demo ") for player in players):
-        return """
-        <section class="data-banner">
-          <strong>Demo data view</strong>
-          <span>This dashboard is generated from synthetic sample players. Do not interpret these names, ratings, or results as current World Cup facts. Import verified roster, lineup, event, and rating data before using it for real analysis.</span>
-        </section>
-        """
-    return """
-    <section class="data-banner verified">
-      <strong>Imported data view</strong>
-      <span>Interpret results according to the quality and coverage of the imported source files. Ratings remain model-generated unless validated against trusted external ratings.</span>
-    </section>
-    """
-
-
-def prediction_section(prediction: dict[str, Any]) -> str:
-    if not prediction:
-        return '<section class="panel"><h2>Prediction</h2><p>No prediction data found.</p></section>'
-    top_scorelines = prediction.get("top_scorelines", [])
-    max_probability = max([number(row.get("probability")) for row in top_scorelines] or [1])
-    scoreline_bars = "".join(
-        bar(str(row.get("score")), number(row.get("probability")), max_probability)
-        for row in top_scorelines
-    )
-    outcomes = [
-        ("Home", number(prediction.get("home_win"))),
-        ("Draw", number(prediction.get("draw"))),
-        ("Away", number(prediction.get("away_win"))),
-    ]
-    outcome_bars = "".join(bar(label, value, 1.0, "probability") for label, value in outcomes)
-    reasons = "".join(f"<li>{esc(reason)}</li>" for reason in prediction.get("reasons", []))
-    return f"""
-    <section class="panel prediction-grid" id="prediction">
-      <div>
-        <p class="eyebrow">Match Prediction</p>
-        <h2>{esc(prediction.get("home_team"))} vs {esc(prediction.get("away_team"))}</h2>
-        <div class="xg-line">
-          <strong>{fmt(prediction.get("expected_home_goals"))}</strong>
-          <span>expected goals</span>
-          <strong>{fmt(prediction.get("expected_away_goals"))}</strong>
-        </div>
-        <div class="confidence {confidence_class(prediction.get("confidence"))}">
-          {esc(prediction.get("confidence", "unknown")).title()} confidence
-        </div>
-        <ul class="reason-list">{reasons}</ul>
-      </div>
-      <div>
-        <h3>Outcome probabilities</h3>
-        {outcome_bars}
-        <h3>Most likely scorelines</h3>
-        {scoreline_bars}
-      </div>
-    </section>
-    """
-
-
-def validation_section(validation: dict[str, Any], backtest: dict[str, Any]) -> str:
-    calibration = "".join(
-        f'<span class="pill">{esc(row.get("bucket"))}: {number(row.get("accuracy")):.1%}</span>'
-        for row in backtest.get("calibration", [])
-    )
-    return f"""
-    <section class="panel metric-grid" id="validation">
-      <div>
-        <p class="eyebrow">Rating Validation</p>
-        <h2>External rating fit</h2>
-        <div class="mini-kpis">
-          {kpi_card("MAE", str(validation.get("mae", "n/a")), "mean absolute error")}
-          {kpi_card("Correlation", str(validation.get("correlation", "n/a")), "rating movement alignment")}
-          {kpi_card("Within 0.5", pct(validation.get("within_half_point_rate", 0)), "close rating share")}
-        </div>
-      </div>
-      <div>
-        <p class="eyebrow">Backtest</p>
-        <h2>Prediction checks</h2>
-        <div class="mini-kpis">
-          {kpi_card("Top-3 score", pct(backtest.get("exact_score_top3_rate", 0)), "exact score hit rate")}
-          {kpi_card("Outcome", pct(backtest.get("outcome_accuracy", 0)), "W/D/L accuracy")}
-          {kpi_card("Log loss", str(backtest.get("log_loss", "n/a")), "lower is better")}
-        </div>
-        <div class="pill-row">{calibration}</div>
-      </div>
-    </section>
-    """
-
-
-def player_cards(
-    overall_rows: list[dict[str, str]],
-    game_rows: list[dict[str, str]],
-    advanced_rows: list[dict[str, str]],
-    limit: int = 6,
-) -> str:
-    grouped = group_player_games(game_rows)
-    advanced_grouped = group_player_games(advanced_rows)
-    cards = []
-    for overall in overall_rows[:limit]:
-        key = (overall["player"], overall["team"])
-        games = grouped.get(key, [])
-        advanced_games = advanced_grouped.get(key, [])
-        trend = [number(row.get("rating")) for row in games]
-        components = average_components(games)
-        average_role_fit = (
-            sum(number(row.get("role_fit_score")) for row in advanced_games) / len(advanced_games)
-            if advanced_games
-            else 0.0
-        )
-        average_usage = (
-            sum(number(row.get("usage_rate")) for row in advanced_games) / len(advanced_games)
-            if advanced_games
-            else 0.0
-        )
-        cards.append(
-            f"""
-            <article class="player-card">
-              <div class="player-card-head">
-                <div>
-                  <h3>{esc(overall.get("player"))}</h3>
-                  <span>{esc(overall.get("team"))} · {esc(overall.get("role_group"))}</span>
-                </div>
-                <strong>{fmt(overall.get("weighted_rating"))}</strong>
-              </div>
-              <div class="player-visuals">
-                {sparkline(trend)}
-                {radar(components)}
-              </div>
-              <dl>
-                <div><dt>Matches</dt><dd>{esc(overall.get("matches"))}</dd></div>
-                <div><dt>Minutes</dt><dd>{fmt(overall.get("minutes"), 0)}</dd></div>
-                <div><dt>Best</dt><dd>{fmt(overall.get("best_rating"))}</dd></div>
-                <div><dt>Role Fit</dt><dd>{average_role_fit:.2f}</dd></div>
-                <div><dt>Usage</dt><dd>{average_usage:.2f}</dd></div>
-                <div><dt>Confidence</dt><dd><span class="tag {confidence_class(overall.get("confidence"))}">{esc(overall.get("confidence"))}</span></dd></div>
-              </dl>
-            </article>
-            """
-        )
-    return '<section class="player-grid" id="players">' + "".join(cards) + "</section>"
-
-
-def role_distribution(overall_rows: list[dict[str, str]]) -> str:
-    counts: dict[str, int] = defaultdict(int)
-    for row in overall_rows:
-        counts[row.get("role_group", "unknown")] += 1
-    max_count = max(counts.values() or [1])
-    bars = "".join(bar(role, float(count), float(max_count)) for role, count in sorted(counts.items()))
-    return f"""
-    <section class="panel">
-      <p class="eyebrow">Squad Shape</p>
-      <h2>Rated players by role</h2>
-      {bars}
-    </section>
-    """
-
-
-def player_table(rows: list[dict[str, str]]) -> str:
-    body = []
-    for index, row in enumerate(rows, start=1):
-        body.append(
-            "<tr>"
-            f"<td>{index}</td>"
-            f"<td><strong>{esc(row.get('player'))}</strong><span>{esc(row.get('team'))}</span></td>"
-            f"<td>{esc(row.get('role_group'))}</td>"
-            f"<td>{esc(row.get('matches'))}</td>"
-            f"<td>{fmt(row.get('minutes'), 0)}</td>"
-            f"<td><strong>{fmt(row.get('weighted_rating'))}</strong></td>"
-            f"<td>{fmt(row.get('best_rating'))}</td>"
-            f"<td><span class=\"tag {confidence_class(row.get('confidence'))}\">{esc(row.get('confidence'))}</span></td>"
-            "</tr>"
-        )
-    return f"""
-    <section class="panel wide" id="ratings">
-      <p class="eyebrow">Player Ratings</p>
-      <h2>Overall leaderboard</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>#</th><th>Player</th><th>Role</th><th>Matches</th><th>Minutes</th><th>Rating</th><th>Best</th><th>Confidence</th></tr></thead>
-          <tbody>{''.join(body)}</tbody>
-        </table>
-      </div>
-    </section>
-    """
-
-
-def game_table(rows: list[dict[str, str]], limit: int = 20) -> str:
-    body = []
-    sorted_rows = sorted(rows, key=lambda row: number(row.get("rating")), reverse=True)
-    for row in sorted_rows[:limit]:
-        body.append(
-            "<tr>"
-            f"<td><strong>{esc(row.get('player'))}</strong><span>{esc(row.get('team'))} vs {esc(row.get('opponent'))}</span></td>"
-            f"<td>{esc(row.get('role_group'))}</td>"
-            f"<td>{fmt(row.get('minutes'), 0)}</td>"
-            f"<td>{fmt(row.get('rating'))}</td>"
-            f"<td>{fmt(row.get('attacking_score'))}</td>"
-            f"<td>{fmt(row.get('possession_score'))}</td>"
-            f"<td>{fmt(row.get('defensive_score'))}</td>"
-            f"<td>{fmt(row.get('goalkeeping_score'))}</td>"
-            "</tr>"
-        )
-    return f"""
-    <section class="panel wide">
-      <p class="eyebrow">Game Analysis</p>
-      <h2>Best single-game performances</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Player</th><th>Role</th><th>Min</th><th>Rating</th><th>Attack</th><th>Possession</th><th>Defense</th><th>GK</th></tr></thead>
-          <tbody>{''.join(body)}</tbody>
-        </table>
-      </div>
-    </section>
-    """
-
-
-def advanced_metrics_table(rows: list[dict[str, str]], limit: int = 20) -> str:
-    sorted_rows = sorted(rows, key=lambda row: number(row.get("role_fit_score")), reverse=True)
-    body = []
-    for row in sorted_rows[:limit]:
-        body.append(
-            "<tr>"
-            f"<td><strong>{esc(row.get('player'))}</strong><span>{esc(row.get('team'))} vs {esc(row.get('opponent'))}</span></td>"
-            f"<td>{esc(row.get('role_group'))}</td>"
-            f"<td>{fmt(row.get('role_fit_score'))}</td>"
-            f"<td>{fmt(row.get('attacking_involvement'))}</td>"
-            f"<td>{fmt(row.get('progression_value'))}</td>"
-            f"<td>{fmt(row.get('ball_security'))}</td>"
-            f"<td>{fmt(row.get('defensive_disruption'))}</td>"
-            f"<td>{fmt(row.get('two_way_value'))}</td>"
-            f"<td>{fmt(row.get('usage_rate'))}</td>"
-            f"<td>{fmt(row.get('xg_efficiency'))}</td>"
-            "</tr>"
-        )
-    return f"""
-    <section class="panel wide" id="advanced">
-      <p class="eyebrow">Advanced Analysis</p>
-      <h2>Role-fit and advanced player metrics</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Player</th><th>Role</th><th>Role Fit</th><th>Attack</th><th>Progression</th><th>Security</th><th>Disruption</th><th>Two-way</th><th>Usage</th><th>xG +/-</th></tr></thead>
-          <tbody>{''.join(body)}</tbody>
-        </table>
-      </div>
-    </section>
-    """
-
-
-def css() -> str:
-    return """
-    :root {
-      color-scheme: light;
-      --bg: #f5f7f4;
-      --ink: #17201d;
-      --muted: #65706c;
-      --line: #dbe2dd;
-      --panel: #ffffff;
-      --accent: #137c55;
-      --accent-2: #2454a6;
-      --warn: #9d6a00;
-      --risk: #a23a3a;
-      --shadow: 0 18px 45px rgba(23, 32, 29, 0.08);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-    }
-    header {
-      background: #12201a;
-      color: #f7fbf8;
-      padding: 34px clamp(18px, 4vw, 54px) 24px;
-      border-bottom: 6px solid #28a66f;
-    }
-    header nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 22px;
-    }
-    header a {
-      color: #dff7ea;
-      text-decoration: none;
-      border: 1px solid rgba(223, 247, 234, 0.28);
-      padding: 8px 11px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    h1, h2, h3, p { margin-top: 0; }
-    h1 {
-      max-width: 960px;
-      margin-bottom: 10px;
-      font-size: clamp(32px, 5vw, 58px);
-      letter-spacing: 0;
-      line-height: 1.02;
-    }
-    header p {
-      max-width: 860px;
-      color: #cbd9d2;
-      font-size: 17px;
-      line-height: 1.55;
-      margin-bottom: 0;
-    }
-    main {
-      padding: 26px clamp(14px, 3vw, 40px) 44px;
-      max-width: 1500px;
-      margin: 0 auto;
-    }
-    .kpi-row, .mini-kpis {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-    }
-    .kpi, .panel, .player-card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-    }
-    .kpi {
-      padding: 18px;
-      min-height: 118px;
-    }
-    .data-banner {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 14px;
-      align-items: center;
-      margin: 0 0 16px;
-      padding: 13px 16px;
-      border: 1px solid #f0c36d;
-      background: #fff7e6;
-      color: #634600;
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-    }
-    .data-banner.verified {
-      border-color: #a9d9c2;
-      background: #eef9f3;
-      color: #145d40;
-    }
-    .data-banner strong { white-space: nowrap; }
-    .data-banner span { line-height: 1.45; }
-    .kpi span, .eyebrow {
-      color: var(--muted);
-      text-transform: uppercase;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .08em;
-    }
-    .kpi strong {
-      display: block;
-      font-size: 31px;
-      margin: 8px 0 4px;
-    }
-    .kpi small { color: var(--muted); line-height: 1.35; }
-    .panel {
-      padding: clamp(18px, 2.4vw, 28px);
-      margin-top: 18px;
-    }
-    .prediction-grid, .metric-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
-      gap: 28px;
-      align-items: start;
-    }
-    .xg-line {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 16px;
-      align-items: center;
-      margin: 18px 0;
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #f8faf8;
-      text-align: center;
-    }
-    .xg-line strong { font-size: 42px; color: var(--accent); }
-    .xg-line span { color: var(--muted); font-weight: 700; }
-    .confidence, .tag, .pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 28px;
-      padding: 5px 9px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 800;
-      background: #edf4f0;
-      color: var(--accent);
-    }
-    .warn { color: var(--warn); background: #fff5d8; }
-    .risk { color: var(--risk); background: #ffe8e5; }
-    .reason-list { color: var(--muted); line-height: 1.55; padding-left: 18px; }
-    .bar-row {
-      display: grid;
-      grid-template-columns: minmax(72px, 130px) 1fr 58px;
-      gap: 12px;
-      align-items: center;
-      margin: 11px 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .bar-track {
-      height: 12px;
-      background: #e9efeb;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .bar-track i {
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      border-radius: inherit;
-    }
-    .player-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-      margin-top: 18px;
-    }
-    .player-card {
-      padding: 18px;
-      min-height: 336px;
-    }
-    .player-card-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: start;
-    }
-    .player-card h3 { margin-bottom: 4px; }
-    .player-card-head span, td span { display: block; color: var(--muted); font-size: 13px; margin-top: 3px; }
-    .player-card-head strong { font-size: 38px; color: var(--accent); }
-    .player-visuals {
-      display: grid;
-      grid-template-columns: 1fr 150px;
-      gap: 12px;
-      align-items: center;
-      min-height: 158px;
-    }
-    .sparkline {
-      width: 100%;
-      height: 72px;
-      color: var(--accent-2);
-      background: #f8faf8;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 12px;
-    }
-    .radar-wrap {
-      position: relative;
-      min-height: 150px;
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-    }
-    .radar circle, .radar line { fill: none; stroke: #d6dfd9; stroke-width: 1.5; }
-    .radar polygon { fill: rgba(19, 124, 85, .18); stroke: var(--accent); stroke-width: 2; }
-    .radar-label {
-      position: absolute;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    .radar-label-0 { top: 0; left: 50%; transform: translateX(-50%); }
-    .radar-label-1 { right: 0; top: 45%; }
-    .radar-label-2 { bottom: 0; left: 42%; }
-    .radar-label-3 { left: 0; top: 45%; }
-    dl {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin: 0;
-    }
-    dt { color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 800; }
-    dd { margin: 4px 0 0; font-weight: 800; }
-    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
-    table { width: 100%; border-collapse: collapse; min-width: 820px; background: #fff; }
-    th, td { padding: 13px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-    th { color: var(--muted); background: #f8faf8; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
-    tbody tr:hover { background: #f8fbf9; }
-    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-    footer { color: var(--muted); text-align: center; padding: 22px; }
-    @media (max-width: 860px) {
-      .prediction-grid, .metric-grid, .player-visuals { grid-template-columns: 1fr; }
-      .data-banner { grid-template-columns: 1fr; }
-      dl { grid-template-columns: repeat(2, 1fr); }
-      .xg-line { grid-template-columns: 1fr; }
-    }
-    """
 
 
 def render_dashboard(
@@ -650,30 +44,21 @@ def render_dashboard(
     overall_rows: list[dict[str, str]],
     game_rows: list[dict[str, str]],
     advanced_rows: list[dict[str, str]],
+    team_rows: list[dict[str, str]],
     prediction: dict[str, Any],
     validation: dict[str, Any],
     backtest: dict[str, Any],
     title: str = "FIFA World Cup 2026 Performance Dashboard",
 ) -> str:
-    sorted_overall = sorted(overall_rows, key=lambda row: number(row.get("weighted_rating")), reverse=True)
-    sorted_games = sorted(game_rows, key=lambda row: number(row.get("rating")), reverse=True)
-    best_player = sorted_overall[0] if sorted_overall else {}
-    top_game = sorted_games[0] if sorted_games else {}
-    kpis = [
-        kpi_card("Rated Players", str(len(sorted_overall)), "overall ratings in database"),
-        kpi_card("Player Games", str(len(game_rows)), "per-match ratings generated"),
-        kpi_card("Advanced Rows", str(len(advanced_rows)), "role-fit metric profiles"),
-        kpi_card(
-            "Top Overall",
-            fmt(best_player.get("weighted_rating")),
-            f"{best_player.get('player', 'n/a')} · {best_player.get('team', '')}",
-        ),
-        kpi_card(
-            "Best Game",
-            fmt(top_game.get("rating")),
-            f"{top_game.get('player', 'n/a')} vs {top_game.get('opponent', '')}",
-        ),
-    ]
+    data = {
+        "overall": overall_rows,
+        "games": game_rows,
+        "advanced": advanced_rows,
+        "teamStats": team_rows,
+        "prediction": prediction,
+        "validation": validation,
+        "backtest": backtest,
+    }
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -683,33 +68,455 @@ def render_dashboard(
   <style>{css()}</style>
 </head>
 <body>
-  <header>
-    <h1>{esc(title)}</h1>
-    <p>Role-aware player ratings, match predictions, exact-score probabilities, validation metrics, and performance trends generated from the project database and report outputs.</p>
+  <aside class="sidebar">
+    <div class="brand">
+      <strong>WC26 Intelligence</strong>
+      <span>ratings · teams · predictions</span>
+    </div>
+    <label>Search players<input id="playerSearch" type="search" placeholder="Name, team, role"></label>
+    <label>Team A<select id="teamA"></select></label>
+    <label>Team B<select id="teamB"></select></label>
+    <label>Role<select id="roleFilter"></select></label>
+    <label>Player A<select id="playerA"></select></label>
+    <label>Player B<select id="playerB"></select></label>
     <nav>
-      <a href="#prediction">Prediction</a>
-      <a href="#players">Player Cards</a>
-      <a href="#ratings">Leaderboard</a>
+      <a href="#overview">Overview</a>
+      <a href="#compare">Team Compare</a>
+      <a href="#players">Players</a>
+      <a href="#playerCompare">Player Compare</a>
       <a href="#validation">Validation</a>
     </nav>
-  </header>
+  </aside>
   <main>
-    {data_quality_banner(sorted_overall, game_rows)}
-    <section class="kpi-row">{"".join(kpis)}</section>
-    {prediction_section(prediction)}
-    {player_cards(sorted_overall, game_rows, advanced_rows)}
-    <div class="metric-grid">
-      {role_distribution(sorted_overall)}
-      {validation_section(validation, backtest)}
-    </div>
-    {player_table(sorted_overall)}
-    {advanced_metrics_table(advanced_rows)}
-    {game_table(game_rows)}
+    <section class="hero" id="overview">
+      <div>
+        <p class="eyebrow">Interactive dashboard</p>
+        <h1>{esc(title)}</h1>
+        <p>Search every loaded player, compare any two loaded teams, inspect complete team rosters, compare two players, and review prediction/validation quality from generated data.</p>
+      </div>
+      <div id="dataBanner" class="data-banner"></div>
+    </section>
+    <section id="kpis" class="kpi-grid"></section>
+    <section id="predictionPanel" class="panel"></section>
+    <section id="compare" class="comparison-grid"></section>
+    <section id="players" class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Player database</p>
+          <h2>Searchable player ratings</h2>
+        </div>
+        <span id="playerCount" class="pill"></span>
+      </div>
+      <div id="playerCards" class="player-grid"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Player</th><th>Team</th><th>Role</th><th>Matches</th><th>Minutes</th><th>Rating</th><th>Role fit</th><th>Usage</th><th>Confidence</th></tr></thead>
+          <tbody id="playerTable"></tbody>
+        </table>
+      </div>
+    </section>
+    <section id="playerCompare" class="comparison-grid"></section>
+    <section id="advanced" class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Advanced metrics</p>
+          <h2>Role-fit leaderboard</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Player</th><th>Team</th><th>Role</th><th>Role Fit</th><th>Attack</th><th>Progression</th><th>Security</th><th>Disruption</th><th>Two-way</th><th>Usage</th></tr></thead>
+          <tbody id="advancedTable"></tbody>
+        </table>
+      </div>
+    </section>
+    <section id="validation" class="metric-grid"></section>
   </main>
-  <footer>Generated from local FIFA analysis outputs. Ratings are model-generated and should be validated against trusted external data when available.</footer>
+  <script id="app-data" type="application/json">{safe_json(data)}</script>
+  <script>{javascript()}</script>
 </body>
 </html>
 """
+
+
+def css() -> str:
+    return """
+    :root {
+      --bg: #f3f6f2;
+      --panel: #ffffff;
+      --ink: #16211d;
+      --muted: #63716c;
+      --line: #dbe3dd;
+      --accent: #0f7a52;
+      --blue: #2557a8;
+      --amber: #a36b00;
+      --red: #a13b36;
+      --shadow: 0 18px 45px rgba(22, 33, 29, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px 18px;
+      background: #11201a;
+      color: #eef8f1;
+      overflow-y: auto;
+    }
+    .brand { padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.14); margin-bottom: 18px; }
+    .brand strong { display: block; font-size: 20px; }
+    .brand span { color: #b9cbc2; font-size: 13px; }
+    label { display: block; margin: 14px 0; color: #cfe0d8; font-size: 13px; font-weight: 800; }
+    input, select {
+      width: 100%;
+      margin-top: 6px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #20332b;
+      color: #fff;
+      font: inherit;
+    }
+    nav { display: grid; gap: 8px; margin-top: 22px; }
+    nav a {
+      color: #e7f5ed;
+      text-decoration: none;
+      padding: 9px 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 6px;
+    }
+    main { padding: 24px clamp(16px, 3vw, 40px) 42px; max-width: 1640px; width: 100%; }
+    .hero, .panel, .team-card, .player-card, .metric-card, .kpi {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+      gap: 18px;
+      padding: clamp(20px, 3vw, 34px);
+      align-items: center;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(34px, 5vw, 60px); line-height: 1.02; letter-spacing: 0; margin-bottom: 12px; }
+    h2 { margin-bottom: 12px; }
+    .hero p { color: var(--muted); line-height: 1.55; max-width: 850px; }
+    .eyebrow {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: .08em;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .data-banner {
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #fff7e5;
+      border: 1px solid #f0c36d;
+      color: #654600;
+      line-height: 1.45;
+    }
+    .data-banner.verified { background: #eef9f3; border-color: #a9d9c2; color: #145d40; }
+    .kpi-grid, .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .kpi, .metric-card { padding: 17px; min-height: 112px; }
+    .kpi span, .metric-card span { color: var(--muted); font-size: 12px; text-transform: uppercase; font-weight: 900; letter-spacing: .06em; }
+    .kpi strong, .metric-card strong { display: block; font-size: 32px; margin: 8px 0 4px; }
+    .kpi small, .metric-card small { color: var(--muted); }
+    .panel { padding: clamp(17px, 2.2vw, 26px); margin-top: 16px; }
+    .panel-head { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 12px; }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .team-card, .player-card { padding: 18px; }
+    .team-card h2, .player-card h3 { margin-bottom: 4px; }
+    .subtle { color: var(--muted); font-size: 13px; }
+    .score { font-size: 42px; color: var(--accent); font-weight: 900; }
+    .bar-row { display: grid; grid-template-columns: 120px 1fr 58px; gap: 10px; align-items: center; margin: 10px 0; color: var(--muted); font-size: 13px; }
+    .bar-track { height: 12px; border-radius: 999px; overflow: hidden; background: #e8efeb; }
+    .bar-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--blue)); }
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin: 14px 0;
+    }
+    .player-card-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .player-card-head strong { font-size: 34px; color: var(--accent); }
+    .sparkline { width: 100%; height: 58px; margin-top: 10px; color: var(--blue); border: 1px solid var(--line); border-radius: 8px; background: #f8faf8; }
+    .radar { width: 120px; height: 120px; }
+    .radar circle, .radar line { fill: none; stroke: #d6dfd9; stroke-width: 1.5; }
+    .radar polygon { fill: rgba(15,122,82,.18); stroke: var(--accent); stroke-width: 2; }
+    .pill, .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: #edf4f0;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .warn { color: var(--amber); background: #fff4d8; }
+    .risk { color: var(--red); background: #ffe8e5; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    table { width: 100%; min-width: 920px; border-collapse: collapse; }
+    th, td { padding: 12px 13px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f8faf8; color: var(--muted); text-transform: uppercase; font-size: 12px; letter-spacing: .05em; }
+    td span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+    tbody tr:hover { background: #f8fbf9; }
+    .roster-list { display: grid; gap: 8px; margin-top: 12px; }
+    .roster-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+    @media (max-width: 980px) {
+      body { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; }
+      .hero, .comparison-grid { grid-template-columns: 1fr; }
+    }
+    """
+
+
+def javascript() -> str:
+    return r"""
+    const app = JSON.parse(document.getElementById('app-data').textContent);
+    const $ = (id) => document.getElementById(id);
+    const num = (v) => Number.parseFloat(v || 0) || 0;
+    const fmt = (v, d = 2) => num(v).toFixed(d);
+    const pct = (v) => `${(num(v) * 100).toFixed(1)}%`;
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+    function teams() {
+      return [...new Set([
+        ...app.overall.map(r => r.team),
+        ...app.games.map(r => r.team),
+        ...app.teamStats.map(r => r.team)
+      ].filter(Boolean))].sort();
+    }
+    function roles() {
+      return ['All roles', ...new Set(app.overall.map(r => r.role_group).filter(Boolean))].sort();
+    }
+    function players() {
+      return app.overall.slice().sort((a,b) => num(b.weighted_rating)-num(a.weighted_rating));
+    }
+    function advFor(player, team) {
+      const rows = app.advanced.filter(r => r.player === player && r.team === team);
+      if (!rows.length) return {};
+      const avg = (field) => rows.reduce((s,r) => s + num(r[field]), 0) / rows.length;
+      return {
+        role_fit_score: avg('role_fit_score'),
+        attacking_involvement: avg('attacking_involvement'),
+        progression_value: avg('progression_value'),
+        ball_security: avg('ball_security'),
+        defensive_disruption: avg('defensive_disruption'),
+        two_way_value: avg('two_way_value'),
+        usage_rate: avg('usage_rate'),
+        xg_efficiency: avg('xg_efficiency')
+      };
+    }
+    function teamProfile(team) {
+      const overall = app.overall.filter(r => r.team === team);
+      const games = app.games.filter(r => r.team === team);
+      const advanced = app.advanced.filter(r => r.team === team);
+      const teamStats = app.teamStats.filter(r => r.team === team);
+      const avg = (rows, field) => rows.length ? rows.reduce((s,r) => s + num(r[field]), 0) / rows.length : 0;
+      return {
+        team,
+        players: overall.length,
+        playerGames: games.length,
+        avgRating: avg(overall, 'weighted_rating'),
+        best: overall.slice().sort((a,b) => num(b.weighted_rating)-num(a.weighted_rating))[0],
+        attack: avg(advanced, 'attacking_involvement'),
+        progression: avg(advanced, 'progression_value'),
+        security: avg(advanced, 'ball_security'),
+        defense: avg(advanced, 'defensive_disruption'),
+        usage: avg(advanced, 'usage_rate'),
+        xgFor: avg(teamStats, 'xg_for'),
+        xgAgainst: avg(teamStats, 'xg_against'),
+        shotsFor: avg(teamStats, 'shots_for'),
+        shotsAgainst: avg(teamStats, 'shots_against'),
+        roster: overall
+      };
+    }
+    function confidenceClass(v) {
+      const text = String(v || '').toLowerCase();
+      if (text === 'high') return '';
+      if (text === 'medium') return 'warn';
+      return 'risk';
+    }
+    function bar(label, value, max = 10) {
+      const width = Math.max(0, Math.min(100, max ? value / max * 100 : 0));
+      return `<div class="bar-row"><span>${esc(label)}</span><div class="bar-track"><i style="width:${width}%"></i></div><strong>${fmt(value)}</strong></div>`;
+    }
+    function sparkline(values) {
+      if (!values.length) return '<svg class="sparkline"></svg>';
+      const w = 220, h = 58, min = Math.min(...values), max = Math.max(...values), span = Math.max(max-min, .01);
+      const points = values.map((v,i) => `${values.length === 1 ? w/2 : i*(w/(values.length-1))},${h - ((v-min)/span*(h-12)) - 6}`).join(' ');
+      return `<svg class="sparkline" viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`;
+    }
+    function radar(values) {
+      const labels = ['attacking_involvement','progression_value','defensive_disruption','ball_security'];
+      const size=120, c=60, r=42;
+      const axes = labels.map((_,i) => {
+        const a = -Math.PI/2 + i * Math.PI/2;
+        return `<line x1="${c}" y1="${c}" x2="${c+r*Math.cos(a)}" y2="${c+r*Math.sin(a)}"></line>`;
+      }).join('');
+      const points = labels.map((key,i) => {
+        const a = -Math.PI/2 + i * Math.PI/2;
+        const v = Math.max(0, Math.min(1, num(values[key])/10));
+        return `${c+r*v*Math.cos(a)},${c+r*v*Math.sin(a)}`;
+      }).join(' ');
+      return `<svg class="radar" viewBox="0 0 ${size} ${size}"><circle cx="${c}" cy="${c}" r="${r}"></circle>${axes}<polygon points="${points}"></polygon></svg>`;
+    }
+    function playerTrend(player, team) {
+      return app.games
+        .filter(r => r.player === player && r.team === team)
+        .sort((a,b) => String(a.match_id).localeCompare(String(b.match_id)))
+        .map(r => num(r.rating));
+    }
+    function populateControls() {
+      const teamOptions = teams().map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+      $('teamA').innerHTML = teamOptions;
+      $('teamB').innerHTML = teamOptions;
+      if (teams()[1]) $('teamB').value = teams()[1];
+      $('roleFilter').innerHTML = roles().map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+      const playerOptions = players().map(p => `<option value="${esc(p.player)}|||${esc(p.team)}">${esc(p.player)} · ${esc(p.team)}</option>`).join('');
+      $('playerA').innerHTML = playerOptions;
+      $('playerB').innerHTML = playerOptions;
+      if (players()[1]) $('playerB').selectedIndex = 1;
+    }
+    function renderBanner() {
+      const demo = [...app.overall, ...app.games].some(r => String(r.player || '').startsWith('Demo '));
+      $('dataBanner').className = `data-banner ${demo ? '' : 'verified'}`;
+      $('dataBanner').innerHTML = demo
+        ? '<strong>Demo data view</strong><br>This page is using synthetic sample players. Import verified roster, lineup, event, and rating data before treating analysis as real.'
+        : '<strong>Imported data view</strong><br>Data appears imported. Interpret results according to source coverage and validation quality.';
+    }
+    function renderKpis() {
+      const top = players()[0] || {};
+      const bestGame = app.games.slice().sort((a,b) => num(b.rating)-num(a.rating))[0] || {};
+      $('kpis').innerHTML = [
+        ['Teams', teams().length, 'loaded teams'],
+        ['Players', app.overall.length, 'searchable players'],
+        ['Player Games', app.games.length, 'rated match rows'],
+        ['Advanced Rows', app.advanced.length, 'role-fit profiles'],
+        ['Top Rating', fmt(top.weighted_rating), `${top.player || 'n/a'} · ${top.team || ''}`],
+        ['Best Game', fmt(bestGame.rating), `${bestGame.player || 'n/a'} vs ${bestGame.opponent || ''}`],
+      ].map(([label,value,detail]) => `<section class="kpi"><span>${label}</span><strong>${value}</strong><small>${esc(detail)}</small></section>`).join('');
+    }
+    function renderPrediction() {
+      const p = app.prediction || {};
+      const topScores = (p.top_scorelines || []).map(s => bar(s.score, num(s.probability), Math.max(...(p.top_scorelines || []).map(x => num(x.probability)), .01))).join('');
+      $('predictionPanel').innerHTML = `
+        <div class="panel-head"><div><p class="eyebrow">Prediction snapshot</p><h2>${esc(p.home_team || 'Team A')} vs ${esc(p.away_team || 'Team B')}</h2></div><span class="pill">${esc(p.confidence || 'unknown')} confidence</span></div>
+        <div class="comparison-grid">
+          <div>${bar('Home win', num(p.home_win), 1)}${bar('Draw', num(p.draw), 1)}${bar('Away win', num(p.away_win), 1)}</div>
+          <div>${topScores}</div>
+        </div>`;
+    }
+    function teamCard(profile, side) {
+      const roster = profile.roster
+        .slice().sort((a,b) => num(b.weighted_rating)-num(a.weighted_rating))
+        .map(p => `<div class="roster-row"><div><strong>${esc(p.player)}</strong><span>${esc(p.role_group)} · ${fmt(p.minutes,0)} min</span></div><strong>${fmt(p.weighted_rating)}</strong></div>`)
+        .join('');
+      return `<article class="team-card">
+        <p class="eyebrow">${side}</p>
+        <h2>${esc(profile.team)}</h2>
+        <div class="score">${fmt(profile.avgRating)}</div>
+        <p class="subtle">${profile.players} players · ${profile.playerGames} player-games · top player ${esc(profile.best?.player || 'n/a')}</p>
+        ${bar('Attack', profile.attack)}${bar('Progression', profile.progression)}${bar('Security', profile.security)}${bar('Defense', profile.defense)}${bar('Usage', profile.usage)}
+        <h3>Roster</h3><div class="roster-list">${roster || '<p class="subtle">No players loaded for this team.</p>'}</div>
+      </article>`;
+    }
+    function renderTeamCompare() {
+      const a = teamProfile($('teamA').value);
+      const b = teamProfile($('teamB').value);
+      $('compare').innerHTML = teamCard(a, 'Team A') + teamCard(b, 'Team B');
+    }
+    function filteredPlayers() {
+      const term = $('playerSearch').value.toLowerCase().trim();
+      const role = $('roleFilter').value;
+      return players().filter(p => {
+        const haystack = `${p.player} ${p.team} ${p.role_group}`.toLowerCase();
+        const roleMatch = role === 'All roles' || p.role_group === role;
+        return roleMatch && (!term || haystack.includes(term));
+      });
+    }
+    function playerCard(p) {
+      const advanced = advFor(p.player, p.team);
+      return `<article class="player-card">
+        <div class="player-card-head"><div><h3>${esc(p.player)}</h3><span>${esc(p.team)} · ${esc(p.role_group)}</span></div><strong>${fmt(p.weighted_rating)}</strong></div>
+        ${sparkline(playerTrend(p.player, p.team))}
+        <div style="display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center;margin-top:10px">${radar(advanced)}<div>${bar('Role fit', num(advanced.role_fit_score))}${bar('Usage', num(advanced.usage_rate))}${bar('Two-way', num(advanced.two_way_value))}</div></div>
+      </article>`;
+    }
+    function renderPlayers() {
+      const rows = filteredPlayers();
+      $('playerCount').textContent = `${rows.length} players`;
+      $('playerCards').innerHTML = rows.slice(0, 8).map(playerCard).join('');
+      $('playerTable').innerHTML = rows.map(p => {
+        const advanced = advFor(p.player, p.team);
+        return `<tr><td><strong>${esc(p.player)}</strong></td><td>${esc(p.team)}</td><td>${esc(p.role_group)}</td><td>${esc(p.matches)}</td><td>${fmt(p.minutes,0)}</td><td><strong>${fmt(p.weighted_rating)}</strong></td><td>${fmt(advanced.role_fit_score)}</td><td>${fmt(advanced.usage_rate)}</td><td><span class="tag ${confidenceClass(p.confidence)}">${esc(p.confidence)}</span></td></tr>`;
+      }).join('');
+    }
+    function playerBySelect(id) {
+      const [player, team] = $(id).value.split('|||');
+      return app.overall.find(p => p.player === player && p.team === team) || {};
+    }
+    function playerCompareCard(p, label) {
+      const advanced = advFor(p.player, p.team);
+      return `<article class="player-card"><p class="eyebrow">${label}</p><div class="player-card-head"><div><h3>${esc(p.player || 'n/a')}</h3><span>${esc(p.team || '')} · ${esc(p.role_group || '')}</span></div><strong>${fmt(p.weighted_rating)}</strong></div>${sparkline(playerTrend(p.player, p.team))}${bar('Role fit', num(advanced.role_fit_score))}${bar('Attack', num(advanced.attacking_involvement))}${bar('Progression', num(advanced.progression_value))}${bar('Defense', num(advanced.defensive_disruption))}${bar('Security', num(advanced.ball_security))}${bar('Usage', num(advanced.usage_rate))}</article>`;
+    }
+    function renderPlayerCompare() {
+      $('playerCompare').innerHTML = playerCompareCard(playerBySelect('playerA'), 'Player A') + playerCompareCard(playerBySelect('playerB'), 'Player B');
+    }
+    function renderAdvanced() {
+      $('advancedTable').innerHTML = app.advanced
+        .slice().sort((a,b) => num(b.role_fit_score)-num(a.role_fit_score))
+        .map(r => `<tr><td><strong>${esc(r.player)}</strong></td><td>${esc(r.team)}</td><td>${esc(r.role_group)}</td><td><strong>${fmt(r.role_fit_score)}</strong></td><td>${fmt(r.attacking_involvement)}</td><td>${fmt(r.progression_value)}</td><td>${fmt(r.ball_security)}</td><td>${fmt(r.defensive_disruption)}</td><td>${fmt(r.two_way_value)}</td><td>${fmt(r.usage_rate)}</td></tr>`)
+        .join('');
+    }
+    function renderValidation() {
+      const v = app.validation || {}, b = app.backtest || {};
+      const cards = [
+        ['Rating MAE', v.mae ?? 'n/a', 'lower is better'],
+        ['Correlation', v.correlation ?? 'n/a', 'external rating alignment'],
+        ['Within 0.5', pct(v.within_half_point_rate), 'close rating share'],
+        ['Top-3 Score', pct(b.exact_score_top3_rate), 'exact score backtest'],
+        ['Outcome Accuracy', pct(b.outcome_accuracy), 'W/D/L backtest'],
+        ['Log Loss', b.log_loss ?? 'n/a', 'probability penalty'],
+      ];
+      $('validation').innerHTML = cards.map(([label,value,detail]) => `<section class="metric-card"><span>${label}</span><strong>${value}</strong><small>${detail}</small></section>`).join('');
+    }
+    function renderAll() {
+      renderBanner(); renderKpis(); renderPrediction(); renderTeamCompare(); renderPlayers(); renderPlayerCompare(); renderAdvanced(); renderValidation();
+    }
+    populateControls();
+    ['teamA','teamB'].forEach(id => $(id).addEventListener('change', renderTeamCompare));
+    ['playerA','playerB'].forEach(id => $(id).addEventListener('change', renderPlayerCompare));
+    $('playerSearch').addEventListener('input', renderPlayers);
+    $('roleFilter').addEventListener('change', renderPlayers);
+    renderAll();
+    """
 
 
 def generate_dashboard(
@@ -717,6 +524,7 @@ def generate_dashboard(
     overall_ratings_path: str | Path,
     game_ratings_path: str | Path,
     advanced_metrics_path: str | Path,
+    team_stats_path: str | Path,
     prediction_path: str | Path,
     validation_path: str | Path,
     backtest_path: str | Path,
@@ -725,14 +533,17 @@ def generate_dashboard(
 ) -> Path:
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    html_output = render_dashboard(
-        overall_rows=read_csv(overall_ratings_path),
-        game_rows=read_csv(game_ratings_path),
-        advanced_rows=read_csv(advanced_metrics_path),
-        prediction=read_json(prediction_path),
-        validation=read_json(validation_path),
-        backtest=read_json(backtest_path),
-        title=title,
+    output.write_text(
+        render_dashboard(
+            overall_rows=read_csv(overall_ratings_path),
+            game_rows=read_csv(game_ratings_path),
+            advanced_rows=read_csv(advanced_metrics_path),
+            team_rows=read_csv(team_stats_path),
+            prediction=read_json(prediction_path),
+            validation=read_json(validation_path),
+            backtest=read_json(backtest_path),
+            title=title,
+        ),
+        encoding="utf-8",
     )
-    output.write_text(html_output, encoding="utf-8")
     return output

@@ -6,494 +6,444 @@
   <title>FIFA World Cup 2026 Performance Dashboard</title>
   <style>
     :root {
-      color-scheme: light;
-      --bg: #f5f7f4;
-      --ink: #17201d;
-      --muted: #65706c;
-      --line: #dbe2dd;
+      --bg: #f3f6f2;
       --panel: #ffffff;
-      --accent: #137c55;
-      --accent-2: #2454a6;
-      --warn: #9d6a00;
-      --risk: #a23a3a;
-      --shadow: 0 18px 45px rgba(23, 32, 29, 0.08);
+      --ink: #16211d;
+      --muted: #63716c;
+      --line: #dbe3dd;
+      --accent: #0f7a52;
+      --blue: #2557a8;
+      --amber: #a36b00;
+      --red: #a13b36;
+      --shadow: 0 18px 45px rgba(22, 33, 29, .08);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--ink);
-    }
-    header {
-      background: #12201a;
-      color: #f7fbf8;
-      padding: 34px clamp(18px, 4vw, 54px) 24px;
-      border-bottom: 6px solid #28a66f;
-    }
-    header nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 22px;
-    }
-    header a {
-      color: #dff7ea;
-      text-decoration: none;
-      border: 1px solid rgba(223, 247, 234, 0.28);
-      padding: 8px 11px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    h1, h2, h3, p { margin-top: 0; }
-    h1 {
-      max-width: 960px;
-      margin-bottom: 10px;
-      font-size: clamp(32px, 5vw, 58px);
-      letter-spacing: 0;
-      line-height: 1.02;
-    }
-    header p {
-      max-width: 860px;
-      color: #cbd9d2;
-      font-size: 17px;
-      line-height: 1.55;
-      margin-bottom: 0;
-    }
-    main {
-      padding: 26px clamp(14px, 3vw, 40px) 44px;
-      max-width: 1500px;
-      margin: 0 auto;
-    }
-    .kpi-row, .mini-kpis {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
     }
-    .kpi, .panel, .player-card {
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px 18px;
+      background: #11201a;
+      color: #eef8f1;
+      overflow-y: auto;
+    }
+    .brand { padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.14); margin-bottom: 18px; }
+    .brand strong { display: block; font-size: 20px; }
+    .brand span { color: #b9cbc2; font-size: 13px; }
+    label { display: block; margin: 14px 0; color: #cfe0d8; font-size: 13px; font-weight: 800; }
+    input, select {
+      width: 100%;
+      margin-top: 6px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #20332b;
+      color: #fff;
+      font: inherit;
+    }
+    nav { display: grid; gap: 8px; margin-top: 22px; }
+    nav a {
+      color: #e7f5ed;
+      text-decoration: none;
+      padding: 9px 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 6px;
+    }
+    main { padding: 24px clamp(16px, 3vw, 40px) 42px; max-width: 1640px; width: 100%; }
+    .hero, .panel, .team-card, .player-card, .metric-card, .kpi {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: var(--shadow);
     }
-    .kpi {
-      padding: 18px;
-      min-height: 118px;
-    }
-    .data-banner {
+    .hero {
       display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 14px;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+      gap: 18px;
+      padding: clamp(20px, 3vw, 34px);
       align-items: center;
-      margin: 0 0 16px;
-      padding: 13px 16px;
-      border: 1px solid #f0c36d;
-      background: #fff7e6;
-      color: #634600;
-      border-radius: 8px;
-      box-shadow: var(--shadow);
     }
-    .data-banner.verified {
-      border-color: #a9d9c2;
-      background: #eef9f3;
-      color: #145d40;
-    }
-    .data-banner strong { white-space: nowrap; }
-    .data-banner span { line-height: 1.45; }
-    .kpi span, .eyebrow {
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(34px, 5vw, 60px); line-height: 1.02; letter-spacing: 0; margin-bottom: 12px; }
+    h2 { margin-bottom: 12px; }
+    .hero p { color: var(--muted); line-height: 1.55; max-width: 850px; }
+    .eyebrow {
       color: var(--muted);
       text-transform: uppercase;
       font-size: 12px;
-      font-weight: 800;
       letter-spacing: .08em;
+      font-weight: 900;
+      margin-bottom: 6px;
     }
-    .kpi strong {
-      display: block;
-      font-size: 31px;
-      margin: 8px 0 4px;
-    }
-    .kpi small { color: var(--muted); line-height: 1.35; }
-    .panel {
-      padding: clamp(18px, 2.4vw, 28px);
-      margin-top: 18px;
-    }
-    .prediction-grid, .metric-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
-      gap: 28px;
-      align-items: start;
-    }
-    .xg-line {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 16px;
-      align-items: center;
-      margin: 18px 0;
-      padding: 16px;
-      border: 1px solid var(--line);
+    .data-banner {
+      padding: 14px 16px;
       border-radius: 8px;
-      background: #f8faf8;
-      text-align: center;
+      background: #fff7e5;
+      border: 1px solid #f0c36d;
+      color: #654600;
+      line-height: 1.45;
     }
-    .xg-line strong { font-size: 42px; color: var(--accent); }
-    .xg-line span { color: var(--muted); font-weight: 700; }
-    .confidence, .tag, .pill {
+    .data-banner.verified { background: #eef9f3; border-color: #a9d9c2; color: #145d40; }
+    .kpi-grid, .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .kpi, .metric-card { padding: 17px; min-height: 112px; }
+    .kpi span, .metric-card span { color: var(--muted); font-size: 12px; text-transform: uppercase; font-weight: 900; letter-spacing: .06em; }
+    .kpi strong, .metric-card strong { display: block; font-size: 32px; margin: 8px 0 4px; }
+    .kpi small, .metric-card small { color: var(--muted); }
+    .panel { padding: clamp(17px, 2.2vw, 26px); margin-top: 16px; }
+    .panel-head { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 12px; }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .team-card, .player-card { padding: 18px; }
+    .team-card h2, .player-card h3 { margin-bottom: 4px; }
+    .subtle { color: var(--muted); font-size: 13px; }
+    .score { font-size: 42px; color: var(--accent); font-weight: 900; }
+    .bar-row { display: grid; grid-template-columns: 120px 1fr 58px; gap: 10px; align-items: center; margin: 10px 0; color: var(--muted); font-size: 13px; }
+    .bar-track { height: 12px; border-radius: 999px; overflow: hidden; background: #e8efeb; }
+    .bar-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--blue)); }
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin: 14px 0;
+    }
+    .player-card-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .player-card-head strong { font-size: 34px; color: var(--accent); }
+    .sparkline { width: 100%; height: 58px; margin-top: 10px; color: var(--blue); border: 1px solid var(--line); border-radius: 8px; background: #f8faf8; }
+    .radar { width: 120px; height: 120px; }
+    .radar circle, .radar line { fill: none; stroke: #d6dfd9; stroke-width: 1.5; }
+    .radar polygon { fill: rgba(15,122,82,.18); stroke: var(--accent); stroke-width: 2; }
+    .pill, .tag {
       display: inline-flex;
       align-items: center;
       min-height: 28px;
       padding: 5px 9px;
       border-radius: 6px;
-      font-size: 13px;
-      font-weight: 800;
       background: #edf4f0;
       color: var(--accent);
+      font-size: 13px;
+      font-weight: 900;
     }
-    .warn { color: var(--warn); background: #fff5d8; }
-    .risk { color: var(--risk); background: #ffe8e5; }
-    .reason-list { color: var(--muted); line-height: 1.55; padding-left: 18px; }
-    .bar-row {
-      display: grid;
-      grid-template-columns: minmax(72px, 130px) 1fr 58px;
-      gap: 12px;
-      align-items: center;
-      margin: 11px 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .bar-track {
-      height: 12px;
-      background: #e9efeb;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .bar-track i {
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      border-radius: inherit;
-    }
-    .player-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-      margin-top: 18px;
-    }
-    .player-card {
-      padding: 18px;
-      min-height: 336px;
-    }
-    .player-card-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: start;
-    }
-    .player-card h3 { margin-bottom: 4px; }
-    .player-card-head span, td span { display: block; color: var(--muted); font-size: 13px; margin-top: 3px; }
-    .player-card-head strong { font-size: 38px; color: var(--accent); }
-    .player-visuals {
-      display: grid;
-      grid-template-columns: 1fr 150px;
-      gap: 12px;
-      align-items: center;
-      min-height: 158px;
-    }
-    .sparkline {
-      width: 100%;
-      height: 72px;
-      color: var(--accent-2);
-      background: #f8faf8;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 12px;
-    }
-    .radar-wrap {
-      position: relative;
-      min-height: 150px;
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-    }
-    .radar circle, .radar line { fill: none; stroke: #d6dfd9; stroke-width: 1.5; }
-    .radar polygon { fill: rgba(19, 124, 85, .18); stroke: var(--accent); stroke-width: 2; }
-    .radar-label {
-      position: absolute;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    .radar-label-0 { top: 0; left: 50%; transform: translateX(-50%); }
-    .radar-label-1 { right: 0; top: 45%; }
-    .radar-label-2 { bottom: 0; left: 42%; }
-    .radar-label-3 { left: 0; top: 45%; }
-    dl {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin: 0;
-    }
-    dt { color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 800; }
-    dd { margin: 4px 0 0; font-weight: 800; }
-    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
-    table { width: 100%; border-collapse: collapse; min-width: 820px; background: #fff; }
-    th, td { padding: 13px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-    th { color: var(--muted); background: #f8faf8; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+    .warn { color: var(--amber); background: #fff4d8; }
+    .risk { color: var(--red); background: #ffe8e5; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    table { width: 100%; min-width: 920px; border-collapse: collapse; }
+    th, td { padding: 12px 13px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f8faf8; color: var(--muted); text-transform: uppercase; font-size: 12px; letter-spacing: .05em; }
+    td span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
     tbody tr:hover { background: #f8fbf9; }
-    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-    footer { color: var(--muted); text-align: center; padding: 22px; }
-    @media (max-width: 860px) {
-      .prediction-grid, .metric-grid, .player-visuals { grid-template-columns: 1fr; }
-      .data-banner { grid-template-columns: 1fr; }
-      dl { grid-template-columns: repeat(2, 1fr); }
-      .xg-line { grid-template-columns: 1fr; }
+    .roster-list { display: grid; gap: 8px; margin-top: 12px; }
+    .roster-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+    @media (max-width: 980px) {
+      body { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; }
+      .hero, .comparison-grid { grid-template-columns: 1fr; }
     }
     </style>
 </head>
 <body>
-  <header>
-    <h1>FIFA World Cup 2026 Performance Dashboard</h1>
-    <p>Role-aware player ratings, match predictions, exact-score probabilities, validation metrics, and performance trends generated from the project database and report outputs.</p>
+  <aside class="sidebar">
+    <div class="brand">
+      <strong>WC26 Intelligence</strong>
+      <span>ratings · teams · predictions</span>
+    </div>
+    <label>Search players<input id="playerSearch" type="search" placeholder="Name, team, role"></label>
+    <label>Team A<select id="teamA"></select></label>
+    <label>Team B<select id="teamB"></select></label>
+    <label>Role<select id="roleFilter"></select></label>
+    <label>Player A<select id="playerA"></select></label>
+    <label>Player B<select id="playerB"></select></label>
     <nav>
-      <a href="#prediction">Prediction</a>
-      <a href="#players">Player Cards</a>
-      <a href="#ratings">Leaderboard</a>
+      <a href="#overview">Overview</a>
+      <a href="#compare">Team Compare</a>
+      <a href="#players">Players</a>
+      <a href="#playerCompare">Player Compare</a>
       <a href="#validation">Validation</a>
     </nav>
-  </header>
+  </aside>
   <main>
-    
-        <section class="data-banner">
-          <strong>Demo data view</strong>
-          <span>This dashboard is generated from synthetic sample players. Do not interpret these names, ratings, or results as current World Cup facts. Import verified roster, lineup, event, and rating data before using it for real analysis.</span>
-        </section>
-        
-    <section class="kpi-row"><section class="kpi "><span>Rated Players</span><strong>7</strong><small>overall ratings in database</small></section><section class="kpi "><span>Player Games</span><strong>16</strong><small>per-match ratings generated</small></section><section class="kpi "><span>Advanced Rows</span><strong>16</strong><small>role-fit metric profiles</small></section><section class="kpi "><span>Top Overall</span><strong>8.40</strong><small>Demo Creator 10 · Argentina</small></section><section class="kpi "><span>Best Game</span><strong>8.90</strong><small>Demo Winger 11 vs Austria</small></section></section>
-    
-    <section class="panel prediction-grid" id="prediction">
+    <section class="hero" id="overview">
       <div>
-        <p class="eyebrow">Match Prediction</p>
-        <h2>Argentina vs France</h2>
-        <div class="xg-line">
-          <strong>1.58</strong>
-          <span>expected goals</span>
-          <strong>1.32</strong>
-        </div>
-        <div class="confidence good">
-          High confidence
-        </div>
-        <ul class="reason-list"><li>Argentina attack profile: 1.75 recent xG, 13.6 shots.</li><li>France defense profile: 1.09 xG conceded, 9.6 shots allowed.</li><li>France attack profile: 1.63 recent xG, 13.6 shots.</li><li>Recent form points: Argentina 2.51, France 1.73.</li></ul>
+        <p class="eyebrow">Interactive dashboard</p>
+        <h1>FIFA World Cup 2026 Performance Dashboard</h1>
+        <p>Search every loaded player, compare any two loaded teams, inspect complete team rosters, compare two players, and review prediction/validation quality from generated data.</p>
       </div>
-      <div>
-        <h3>Outcome probabilities</h3>
-        <div class="bar-row probability"><span>Home</span><div class="bar-track"><i style="width:43.4%"></i></div><strong>0.43</strong></div><div class="bar-row probability"><span>Draw</span><div class="bar-track"><i style="width:24.6%"></i></div><strong>0.25</strong></div><div class="bar-row probability"><span>Away</span><div class="bar-track"><i style="width:32.0%"></i></div><strong>0.32</strong></div>
-        <h3>Most likely scorelines</h3>
-        <div class="bar-row "><span>1-1</span><div class="bar-track"><i style="width:100.0%"></i></div><strong>0.11</strong></div><div class="bar-row "><span>2-1</span><div class="bar-track"><i style="width:78.8%"></i></div><strong>0.09</strong></div><div class="bar-row "><span>1-0</span><div class="bar-track"><i style="width:75.5%"></i></div><strong>0.09</strong></div><div class="bar-row "><span>1-2</span><div class="bar-track"><i style="width:66.2%"></i></div><strong>0.08</strong></div><div class="bar-row "><span>0-1</span><div class="bar-track"><i style="width:63.4%"></i></div><strong>0.07</strong></div>
-      </div>
+      <div id="dataBanner" class="data-banner"></div>
     </section>
-    
-    <section class="player-grid" id="players">
-            <article class="player-card">
-              <div class="player-card-head">
-                <div>
-                  <h3>Demo Creator 10</h3>
-                  <span>Argentina · attacking_midfielder</span>
-                </div>
-                <strong>8.40</strong>
-              </div>
-              <div class="player-visuals">
-                <svg class="sparkline" viewBox="0 0 170 44" role="img" aria-label="Rating trend"><polyline points="0.0,4.0 42.5,17.3 85.0,18.8 127.5,40.0 170.0,21.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-                <div class="radar-wrap"><svg class="radar" viewBox="0 0 138 138" role="img" aria-label="Role component radar"><circle cx="69.0" cy="69.0" r="52.4"></circle><line x1="69.0" y1="69.0" x2="69.0" y2="16.6"></line><line x1="69.0" y1="69.0" x2="121.4" y2="69.0"></line><line x1="69.0" y1="69.0" x2="69.0" y2="121.4"></line><line x1="69.0" y1="69.0" x2="16.6" y2="69.0"></line><polygon points="69.0,40.1 103.9,69.0 69.0,74.2 59.2,69.0"></polygon></svg><span class="radar-label radar-label-0">attacking</span><span class="radar-label radar-label-1">possession</span><span class="radar-label radar-label-2">defensive</span><span class="radar-label radar-label-3">goalkeeping</span></div>
-              </div>
-              <dl>
-                <div><dt>Matches</dt><dd>5</dd></div>
-                <div><dt>Minutes</dt><dd>414</dd></div>
-                <div><dt>Best</dt><dd>8.84</dd></div>
-                <div><dt>Role Fit</dt><dd>8.27</dd></div>
-                <div><dt>Usage</dt><dd>7.09</dd></div>
-                <div><dt>Confidence</dt><dd><span class="tag good">high</span></dd></div>
-              </dl>
-            </article>
-            
-            <article class="player-card">
-              <div class="player-card-head">
-                <div>
-                  <h3>Demo Playmaker 7</h3>
-                  <span>France · attacking_midfielder</span>
-                </div>
-                <strong>8.30</strong>
-              </div>
-              <div class="player-visuals">
-                <svg class="sparkline" viewBox="0 0 170 44" role="img" aria-label="Rating trend"><polyline points="85.0,22.0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-                <div class="radar-wrap"><svg class="radar" viewBox="0 0 138 138" role="img" aria-label="Role component radar"><circle cx="69.0" cy="69.0" r="52.4"></circle><line x1="69.0" y1="69.0" x2="69.0" y2="16.6"></line><line x1="69.0" y1="69.0" x2="121.4" y2="69.0"></line><line x1="69.0" y1="69.0" x2="69.0" y2="121.4"></line><line x1="69.0" y1="69.0" x2="16.6" y2="69.0"></line><polygon points="69.0,46.6 97.8,69.0 69.0,81.5 57.8,69.0"></polygon></svg><span class="radar-label radar-label-0">attacking</span><span class="radar-label radar-label-1">possession</span><span class="radar-label radar-label-2">defensive</span><span class="radar-label radar-label-3">goalkeeping</span></div>
-              </div>
-              <dl>
-                <div><dt>Matches</dt><dd>1</dd></div>
-                <div><dt>Minutes</dt><dd>88</dd></div>
-                <div><dt>Best</dt><dd>8.30</dd></div>
-                <div><dt>Role Fit</dt><dd>8.83</dd></div>
-                <div><dt>Usage</dt><dd>6.52</dd></div>
-                <div><dt>Confidence</dt><dd><span class="tag warn">medium</span></dd></div>
-              </dl>
-            </article>
-            
-            <article class="player-card">
-              <div class="player-card-head">
-                <div>
-                  <h3>Demo Winger 11</h3>
-                  <span>France · winger</span>
-                </div>
-                <strong>8.23</strong>
-              </div>
-              <div class="player-visuals">
-                <svg class="sparkline" viewBox="0 0 170 44" role="img" aria-label="Rating trend"><polyline points="0.0,15.5 42.5,21.0 85.0,6.9 127.5,4.0 170.0,40.0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-                <div class="radar-wrap"><svg class="radar" viewBox="0 0 138 138" role="img" aria-label="Role component radar"><circle cx="69.0" cy="69.0" r="52.4"></circle><line x1="69.0" y1="69.0" x2="69.0" y2="16.6"></line><line x1="69.0" y1="69.0" x2="121.4" y2="69.0"></line><line x1="69.0" y1="69.0" x2="69.0" y2="121.4"></line><line x1="69.0" y1="69.0" x2="16.6" y2="69.0"></line><polygon points="69.0,39.8 100.1,69.0 69.0,73.0 62.0,69.0"></polygon></svg><span class="radar-label radar-label-0">attacking</span><span class="radar-label radar-label-1">possession</span><span class="radar-label radar-label-2">defensive</span><span class="radar-label radar-label-3">goalkeeping</span></div>
-              </div>
-              <dl>
-                <div><dt>Matches</dt><dd>5</dd></div>
-                <div><dt>Minutes</dt><dd>428</dd></div>
-                <div><dt>Best</dt><dd>8.90</dd></div>
-                <div><dt>Role Fit</dt><dd>7.60</dd></div>
-                <div><dt>Usage</dt><dd>6.54</dd></div>
-                <div><dt>Confidence</dt><dd><span class="tag good">high</span></dd></div>
-              </dl>
-            </article>
-            
-            <article class="player-card">
-              <div class="player-card-head">
-                <div>
-                  <h3>Demo Striker 9</h3>
-                  <span>Argentina · forward</span>
-                </div>
-                <strong>7.78</strong>
-              </div>
-              <div class="player-visuals">
-                <svg class="sparkline" viewBox="0 0 170 44" role="img" aria-label="Rating trend"><polyline points="0.0,4.0 170.0,40.0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-                <div class="radar-wrap"><svg class="radar" viewBox="0 0 138 138" role="img" aria-label="Role component radar"><circle cx="69.0" cy="69.0" r="52.4"></circle><line x1="69.0" y1="69.0" x2="69.0" y2="16.6"></line><line x1="69.0" y1="69.0" x2="121.4" y2="69.0"></line><line x1="69.0" y1="69.0" x2="69.0" y2="121.4"></line><line x1="69.0" y1="69.0" x2="16.6" y2="69.0"></line><polygon points="69.0,40.8 78.3,69.0 69.0,75.7 63.2,69.0"></polygon></svg><span class="radar-label radar-label-0">attacking</span><span class="radar-label radar-label-1">possession</span><span class="radar-label radar-label-2">defensive</span><span class="radar-label radar-label-3">goalkeeping</span></div>
-              </div>
-              <dl>
-                <div><dt>Matches</dt><dd>2</dd></div>
-                <div><dt>Minutes</dt><dd>150</dd></div>
-                <div><dt>Best</dt><dd>7.93</dd></div>
-                <div><dt>Role Fit</dt><dd>6.36</dd></div>
-                <div><dt>Usage</dt><dd>4.53</dd></div>
-                <div><dt>Confidence</dt><dd><span class="tag warn">medium</span></dd></div>
-              </dl>
-            </article>
-            
-            <article class="player-card">
-              <div class="player-card-head">
-                <div>
-                  <h3>Demo Controller 8</h3>
-                  <span>Argentina · central_midfielder</span>
-                </div>
-                <strong>7.71</strong>
-              </div>
-              <div class="player-visuals">
-                <svg class="sparkline" viewBox="0 0 170 44" role="img" aria-label="Rating trend"><polyline points="85.0,22.0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-                <div class="radar-wrap"><svg class="radar" viewBox="0 0 138 138" role="img" aria-label="Role component radar"><circle cx="69.0" cy="69.0" r="52.4"></circle><line x1="69.0" y1="69.0" x2="69.0" y2="16.6"></line><line x1="69.0" y1="69.0" x2="121.4" y2="69.0"></line><line x1="69.0" y1="69.0" x2="69.0" y2="121.4"></line><line x1="69.0" y1="69.0" x2="16.6" y2="69.0"></line><polygon points="69.0,62.5 96.9,69.0 69.0,91.5 57.4,69.0"></polygon></svg><span class="radar-label radar-label-0">attacking</span><span class="radar-label radar-label-1">possession</span><span class="radar-label radar-label-2">defensive</span><span class="radar-label radar-label-3">goalkeeping</span></div>
-              </div>
-              <dl>
-                <div><dt>Matches</dt><dd>1</dd></div>
-                <div><dt>Minutes</dt><dd>90</dd></div>
-                <div><dt>Best</dt><dd>7.71</dd></div>
-                <div><dt>Role Fit</dt><dd>7.49</dd></div>
-                <div><dt>Usage</dt><dd>4.98</dd></div>
-                <div><dt>Confidence</dt><dd><span class="tag warn">medium</span></dd></div>
-              </dl>
-            </article>
-            
-            <article class="player-card">
-              <div class="player-card-head">
-                <div>
-                  <h3>Demo Anchor 6</h3>
-                  <span>France · defensive_midfielder</span>
-                </div>
-                <strong>7.70</strong>
-              </div>
-              <div class="player-visuals">
-                <svg class="sparkline" viewBox="0 0 170 44" role="img" aria-label="Rating trend"><polyline points="85.0,22.0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-                <div class="radar-wrap"><svg class="radar" viewBox="0 0 138 138" role="img" aria-label="Role component radar"><circle cx="69.0" cy="69.0" r="52.4"></circle><line x1="69.0" y1="69.0" x2="69.0" y2="16.6"></line><line x1="69.0" y1="69.0" x2="121.4" y2="69.0"></line><line x1="69.0" y1="69.0" x2="69.0" y2="121.4"></line><line x1="69.0" y1="69.0" x2="16.6" y2="69.0"></line><polygon points="69.0,65.0 89.5,69.0 69.0,98.6 57.0,69.0"></polygon></svg><span class="radar-label radar-label-0">attacking</span><span class="radar-label radar-label-1">possession</span><span class="radar-label radar-label-2">defensive</span><span class="radar-label radar-label-3">goalkeeping</span></div>
-              </div>
-              <dl>
-                <div><dt>Matches</dt><dd>1</dd></div>
-                <div><dt>Minutes</dt><dd>90</dd></div>
-                <div><dt>Best</dt><dd>7.70</dd></div>
-                <div><dt>Role Fit</dt><dd>6.97</dd></div>
-                <div><dt>Usage</dt><dd>3.55</dd></div>
-                <div><dt>Confidence</dt><dd><span class="tag warn">medium</span></dd></div>
-              </dl>
-            </article>
-            </section>
-    <div class="metric-grid">
-      
-    <section class="panel">
-      <p class="eyebrow">Squad Shape</p>
-      <h2>Rated players by role</h2>
-      <div class="bar-row "><span>attacking_midfielder</span><div class="bar-track"><i style="width:100.0%"></i></div><strong>2.00</strong></div><div class="bar-row "><span>center_back</span><div class="bar-track"><i style="width:50.0%"></i></div><strong>1.00</strong></div><div class="bar-row "><span>central_midfielder</span><div class="bar-track"><i style="width:50.0%"></i></div><strong>1.00</strong></div><div class="bar-row "><span>defensive_midfielder</span><div class="bar-track"><i style="width:50.0%"></i></div><strong>1.00</strong></div><div class="bar-row "><span>forward</span><div class="bar-track"><i style="width:50.0%"></i></div><strong>1.00</strong></div><div class="bar-row "><span>winger</span><div class="bar-track"><i style="width:50.0%"></i></div><strong>1.00</strong></div>
-    </section>
-    
-      
-    <section class="panel metric-grid" id="validation">
-      <div>
-        <p class="eyebrow">Rating Validation</p>
-        <h2>External rating fit</h2>
-        <div class="mini-kpis">
-          <section class="kpi "><span>MAE</span><strong>0.157</strong><small>mean absolute error</small></section>
-          <section class="kpi "><span>Correlation</span><strong>0.916</strong><small>rating movement alignment</small></section>
-          <section class="kpi "><span>Within 0.5</span><strong>100.0%</strong><small>close rating share</small></section>
+    <section id="kpis" class="kpi-grid"></section>
+    <section id="predictionPanel" class="panel"></section>
+    <section id="compare" class="comparison-grid"></section>
+    <section id="players" class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Player database</p>
+          <h2>Searchable player ratings</h2>
         </div>
+        <span id="playerCount" class="pill"></span>
       </div>
-      <div>
-        <p class="eyebrow">Backtest</p>
-        <h2>Prediction checks</h2>
-        <div class="mini-kpis">
-          <section class="kpi "><span>Top-3 score</span><strong>100.0%</strong><small>exact score hit rate</small></section>
-          <section class="kpi "><span>Outcome</span><strong>66.7%</strong><small>W/D/L accuracy</small></section>
-          <section class="kpi "><span>Log loss</span><strong>1.021</strong><small>lower is better</small></section>
-        </div>
-        <div class="pill-row"><span class="pill">30-40%: 0.0%</span><span class="pill">40-50%: 100.0%</span></div>
-      </div>
-    </section>
-    
-    </div>
-    
-    <section class="panel wide" id="ratings">
-      <p class="eyebrow">Player Ratings</p>
-      <h2>Overall leaderboard</h2>
+      <div id="playerCards" class="player-grid"></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Player</th><th>Role</th><th>Matches</th><th>Minutes</th><th>Rating</th><th>Best</th><th>Confidence</th></tr></thead>
-          <tbody><tr><td>1</td><td><strong>Demo Creator 10</strong><span>Argentina</span></td><td>attacking_midfielder</td><td>5</td><td>414</td><td><strong>8.40</strong></td><td>8.84</td><td><span class="tag good">high</span></td></tr><tr><td>2</td><td><strong>Demo Playmaker 7</strong><span>France</span></td><td>attacking_midfielder</td><td>1</td><td>88</td><td><strong>8.30</strong></td><td>8.30</td><td><span class="tag warn">medium</span></td></tr><tr><td>3</td><td><strong>Demo Winger 11</strong><span>France</span></td><td>winger</td><td>5</td><td>428</td><td><strong>8.23</strong></td><td>8.90</td><td><span class="tag good">high</span></td></tr><tr><td>4</td><td><strong>Demo Striker 9</strong><span>Argentina</span></td><td>forward</td><td>2</td><td>150</td><td><strong>7.78</strong></td><td>7.93</td><td><span class="tag warn">medium</span></td></tr><tr><td>5</td><td><strong>Demo Controller 8</strong><span>Argentina</span></td><td>central_midfielder</td><td>1</td><td>90</td><td><strong>7.71</strong></td><td>7.71</td><td><span class="tag warn">medium</span></td></tr><tr><td>6</td><td><strong>Demo Anchor 6</strong><span>France</span></td><td>defensive_midfielder</td><td>1</td><td>90</td><td><strong>7.70</strong></td><td>7.70</td><td><span class="tag warn">medium</span></td></tr><tr><td>7</td><td><strong>Demo Center Back 4</strong><span>Argentina</span></td><td>center_back</td><td>1</td><td>90</td><td><strong>7.64</strong></td><td>7.64</td><td><span class="tag warn">medium</span></td></tr></tbody>
+          <thead><tr><th>Player</th><th>Team</th><th>Role</th><th>Matches</th><th>Minutes</th><th>Rating</th><th>Role fit</th><th>Usage</th><th>Confidence</th></tr></thead>
+          <tbody id="playerTable"></tbody>
         </table>
       </div>
     </section>
-    
-    
-    <section class="panel wide" id="advanced">
-      <p class="eyebrow">Advanced Analysis</p>
-      <h2>Role-fit and advanced player metrics</h2>
+    <section id="playerCompare" class="comparison-grid"></section>
+    <section id="advanced" class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Advanced metrics</p>
+          <h2>Role-fit leaderboard</h2>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Player</th><th>Role</th><th>Role Fit</th><th>Attack</th><th>Progression</th><th>Security</th><th>Disruption</th><th>Two-way</th><th>Usage</th><th>xG +/-</th></tr></thead>
-          <tbody><tr><td><strong>Demo Playmaker 7</strong><span>France vs Iraq</span></td><td>attacking_midfielder</td><td>8.83</td><td>10.00</td><td>9.34</td><td>7.19</td><td>5.83</td><td>7.76</td><td>6.52</td><td>4.76</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Algeria</span></td><td>attacking_midfielder</td><td>8.73</td><td>10.00</td><td>10.00</td><td>7.27</td><td>3.08</td><td>6.89</td><td>7.57</td><td>6.10</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Austria</span></td><td>attacking_midfielder</td><td>8.71</td><td>10.00</td><td>10.00</td><td>7.53</td><td>2.54</td><td>6.64</td><td>7.30</td><td>4.56</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Austria</span></td><td>winger</td><td>8.57</td><td>10.00</td><td>10.00</td><td>6.62</td><td>2.70</td><td>6.71</td><td>8.20</td><td>6.02</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Jordan</span></td><td>attacking_midfielder</td><td>8.41</td><td>9.78</td><td>10.00</td><td>7.19</td><td>1.21</td><td>6.04</td><td>7.51</td><td>6.26</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Norway</span></td><td>attacking_midfielder</td><td>8.39</td><td>9.79</td><td>10.00</td><td>6.94</td><td>1.36</td><td>6.11</td><td>7.49</td><td>6.38</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Iraq</span></td><td>winger</td><td>8.29</td><td>10.00</td><td>10.00</td><td>6.47</td><td>0.79</td><td>5.86</td><td>7.10</td><td>7.52</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Senegal</span></td><td>winger</td><td>8.25</td><td>9.68</td><td>10.00</td><td>6.24</td><td>1.57</td><td>6.21</td><td>6.95</td><td>5.90</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Norway</span></td><td>winger</td><td>7.69</td><td>8.12</td><td>10.00</td><td>6.43</td><td>1.41</td><td>6.13</td><td>6.30</td><td>4.44</td></tr><tr><td><strong>Demo Controller 8</strong><span>Argentina vs Jordan</span></td><td>central_midfielder</td><td>7.49</td><td>2.29</td><td>8.91</td><td>7.18</td><td>10.00</td><td>5.93</td><td>4.98</td><td>4.92</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Senegal</span></td><td>attacking_midfielder</td><td>7.10</td><td>6.51</td><td>8.98</td><td>6.81</td><td>4.00</td><td>6.74</td><td>5.58</td><td>4.64</td></tr><tr><td><strong>Demo Anchor 6</strong><span>France vs Austria</span></td><td>defensive_midfielder</td><td>6.97</td><td>1.40</td><td>5.74</td><td>7.01</td><td>10.00</td><td>3.79</td><td>3.55</td><td>4.94</td></tr><tr><td><strong>Demo Striker 9</strong><span>Argentina vs Algeria</span></td><td>forward</td><td>6.92</td><td>9.40</td><td>2.43</td><td>4.60</td><td>4.14</td><td>3.20</td><td>4.90</td><td>5.76</td></tr><tr><td><strong>Demo Center Back 4</strong><span>Argentina vs Norway</span></td><td>center_back</td><td>6.65</td><td>0.51</td><td>3.32</td><td>6.11</td><td>10.00</td><td>2.06</td><td>1.90</td><td>4.96</td></tr><tr><td><strong>Demo Striker 9</strong><span>Argentina vs Austria</span></td><td>forward</td><td>5.80</td><td>8.12</td><td>2.99</td><td>3.83</td><td>2.06</td><td>2.57</td><td>4.15</td><td>6.04</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Brazil</span></td><td>winger</td><td>5.22</td><td>3.21</td><td>7.77</td><td>6.08</td><td>2.70</td><td>5.49</td><td>4.15</td><td>4.60</td></tr></tbody>
+          <thead><tr><th>Player</th><th>Team</th><th>Role</th><th>Role Fit</th><th>Attack</th><th>Progression</th><th>Security</th><th>Disruption</th><th>Two-way</th><th>Usage</th></tr></thead>
+          <tbody id="advancedTable"></tbody>
         </table>
       </div>
     </section>
-    
-    
-    <section class="panel wide">
-      <p class="eyebrow">Game Analysis</p>
-      <h2>Best single-game performances</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Player</th><th>Role</th><th>Min</th><th>Rating</th><th>Attack</th><th>Possession</th><th>Defense</th><th>GK</th></tr></thead>
-          <tbody><tr><td><strong>Demo Winger 11</strong><span>France vs Austria</span></td><td>winger</td><td>82</td><td>8.90</td><td>0.80</td><td>0.72</td><td>0.11</td><td>0.14</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Algeria</span></td><td>attacking_midfielder</td><td>84</td><td>8.84</td><td>0.75</td><td>0.70</td><td>0.12</td><td>0.19</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Iraq</span></td><td>winger</td><td>76</td><td>8.76</td><td>0.73</td><td>0.69</td><td>0.04</td><td>0.11</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Austria</span></td><td>attacking_midfielder</td><td>78</td><td>8.49</td><td>0.49</td><td>0.72</td><td>0.11</td><td>0.21</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Jordan</span></td><td>attacking_midfielder</td><td>80</td><td>8.45</td><td>0.56</td><td>0.73</td><td>0.05</td><td>0.17</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Norway</span></td><td>attacking_midfielder</td><td>82</td><td>8.38</td><td>0.55</td><td>0.66</td><td>0.05</td><td>0.18</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Senegal</span></td><td>winger</td><td>90</td><td>8.35</td><td>0.57</td><td>0.60</td><td>0.07</td><td>0.13</td></tr><tr><td><strong>Demo Playmaker 7</strong><span>France vs Iraq</span></td><td>attacking_midfielder</td><td>88</td><td>8.30</td><td>0.43</td><td>0.55</td><td>0.24</td><td>0.21</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Norway</span></td><td>winger</td><td>90</td><td>8.09</td><td>0.49</td><td>0.56</td><td>0.06</td><td>0.14</td></tr><tr><td><strong>Demo Striker 9</strong><span>Argentina vs Algeria</span></td><td>forward</td><td>74</td><td>7.93</td><td>0.58</td><td>0.17</td><td>0.17</td><td>0.12</td></tr><tr><td><strong>Demo Creator 10</strong><span>Argentina vs Senegal</span></td><td>attacking_midfielder</td><td>90</td><td>7.89</td><td>0.40</td><td>0.50</td><td>0.16</td><td>0.19</td></tr><tr><td><strong>Demo Controller 8</strong><span>Argentina vs Jordan</span></td><td>central_midfielder</td><td>90</td><td>7.71</td><td>0.12</td><td>0.53</td><td>0.43</td><td>0.22</td></tr><tr><td><strong>Demo Anchor 6</strong><span>France vs Austria</span></td><td>defensive_midfielder</td><td>90</td><td>7.70</td><td>0.08</td><td>0.39</td><td>0.56</td><td>0.23</td></tr><tr><td><strong>Demo Striker 9</strong><span>Argentina vs Austria</span></td><td>forward</td><td>76</td><td>7.64</td><td>0.49</td><td>0.18</td><td>0.09</td><td>0.10</td></tr><tr><td><strong>Demo Center Back 4</strong><span>Argentina vs Norway</span></td><td>center_back</td><td>90</td><td>7.64</td><td>0.03</td><td>0.27</td><td>0.57</td><td>0.20</td></tr><tr><td><strong>Demo Winger 11</strong><span>France vs Brazil</span></td><td>winger</td><td>90</td><td>7.18</td><td>0.19</td><td>0.41</td><td>0.11</td><td>0.15</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-    
+    <section id="validation" class="metric-grid"></section>
   </main>
-  <footer>Generated from local FIFA analysis outputs. Ratings are model-generated and should be validated against trusted external data when available.</footer>
+  <script id="app-data" type="application/json">{"overall": [{"player": "Demo Brazil Creator 10", "team": "Brazil", "role_group": "attacking_midfielder", "matches": "1", "minutes": "90.0", "average_rating": "8.83", "weighted_rating": "8.83", "best_rating": "8.83", "latest_rating": "8.83", "confidence": "medium"}, {"player": "Demo Creator 10", "team": "Argentina", "role_group": "attacking_midfielder", "matches": "5", "minutes": "414.0", "average_rating": "8.41", "weighted_rating": "8.4", "best_rating": "8.84", "latest_rating": "8.38", "confidence": "high"}, {"player": "Demo Playmaker 7", "team": "France", "role_group": "attacking_midfielder", "matches": "1", "minutes": "88.0", "average_rating": "8.3", "weighted_rating": "8.3", "best_rating": "8.3", "latest_rating": "8.3", "confidence": "medium"}, {"player": "Demo Winger 11", "team": "France", "role_group": "winger", "matches": "5", "minutes": "428.0", "average_rating": "8.26", "weighted_rating": "8.23", "best_rating": "8.9", "latest_rating": "7.18", "confidence": "high"}, {"player": "Demo Senegal Winger 11", "team": "Senegal", "role_group": "winger", "matches": "1", "minutes": "90.0", "average_rating": "8.07", "weighted_rating": "8.07", "best_rating": "8.07", "latest_rating": "8.07", "confidence": "medium"}, {"player": "Demo Brazil Center Back 3", "team": "Brazil", "role_group": "center_back", "matches": "1", "minutes": "90.0", "average_rating": "7.89", "weighted_rating": "7.89", "best_rating": "7.89", "latest_rating": "7.89", "confidence": "medium"}, {"player": "Demo Austria Mid 8", "team": "Austria", "role_group": "central_midfielder", "matches": "1", "minutes": "90.0", "average_rating": "7.87", "weighted_rating": "7.87", "best_rating": "7.87", "latest_rating": "7.87", "confidence": "medium"}, {"player": "Demo Striker 9", "team": "Argentina", "role_group": "forward", "matches": "2", "minutes": "150.0", "average_rating": "7.79", "weighted_rating": "7.78", "best_rating": "7.93", "latest_rating": "7.64", "confidence": "medium"}, {"player": "Demo Algeria Back 5", "team": "Algeria", "role_group": "center_back", "matches": "1", "minutes": "90.0", "average_rating": "7.71", "weighted_rating": "7.71", "best_rating": "7.71", "latest_rating": "7.71", "confidence": "medium"}, {"player": "Demo Controller 8", "team": "Argentina", "role_group": "central_midfielder", "matches": "1", "minutes": "90.0", "average_rating": "7.71", "weighted_rating": "7.71", "best_rating": "7.71", "latest_rating": "7.71", "confidence": "medium"}, {"player": "Demo Anchor 6", "team": "France", "role_group": "defensive_midfielder", "matches": "1", "minutes": "90.0", "average_rating": "7.7", "weighted_rating": "7.7", "best_rating": "7.7", "latest_rating": "7.7", "confidence": "medium"}, {"player": "Demo Norway Striker 9", "team": "Norway", "role_group": "forward", "matches": "1", "minutes": "82.0", "average_rating": "7.69", "weighted_rating": "7.69", "best_rating": "7.69", "latest_rating": "7.69", "confidence": "medium"}, {"player": "Demo Senegal Anchor 6", "team": "Senegal", "role_group": "defensive_midfielder", "matches": "1", "minutes": "90.0", "average_rating": "7.67", "weighted_rating": "7.67", "best_rating": "7.67", "latest_rating": "7.67", "confidence": "medium"}, {"player": "Demo Center Back 4", "team": "Argentina", "role_group": "center_back", "matches": "1", "minutes": "90.0", "average_rating": "7.64", "weighted_rating": "7.64", "best_rating": "7.64", "latest_rating": "7.64", "confidence": "medium"}, {"player": "Demo Norway Keeper 1", "team": "Norway", "role_group": "goalkeeper", "matches": "1", "minutes": "90.0", "average_rating": "7.64", "weighted_rating": "7.64", "best_rating": "7.64", "latest_rating": "7.64", "confidence": "medium"}, {"player": "Demo Austria Fullback 2", "team": "Austria", "role_group": "full_back", "matches": "1", "minutes": "86.0", "average_rating": "7.58", "weighted_rating": "7.58", "best_rating": "7.58", "latest_rating": "7.58", "confidence": "medium"}, {"player": "Demo Algeria Forward 9", "team": "Algeria", "role_group": "forward", "matches": "1", "minutes": "88.0", "average_rating": "6.79", "weighted_rating": "6.79", "best_rating": "6.79", "latest_rating": "6.79", "confidence": "medium"}], "games": [{"match_id": "ALG-1", "player": "Demo Algeria Back 5", "team": "Algeria", "opponent": "Argentina", "position": "Center Back", "role_group": "center_back", "rating": "7.71", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.0027", "possession_score": "0.2169", "defensive_score": "0.6769", "goalkeeping_score": "0.1571", "reasons": "center_back weighted most toward defensive_score, possession_score, attacking_score. | Strongest component: defensive score 0.68. | Advanced role-fit score: 6.20/10."}, {"match_id": "ALG-1", "player": "Demo Algeria Forward 9", "team": "Algeria", "opponent": "Argentina", "position": "Center Forward", "role_group": "forward", "rating": "6.79", "confidence": "medium", "minutes": "88.0", "attacking_score": "0.2025", "possession_score": "0.2124", "defensive_score": "0.1519", "goalkeeping_score": "0.0857", "reasons": "forward weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.21. | Advanced role-fit score: 3.47/10."}, {"match_id": "ARG-1", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Algeria", "position": "Center Attacking Midfield", "role_group": "attacking_midfielder", "rating": "8.84", "confidence": "medium", "minutes": "84.0", "attacking_score": "0.7507", "possession_score": "0.6977", "defensive_score": "0.1216", "goalkeeping_score": "0.1857", "reasons": "attacking_midfielder weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: attacking score 0.75. | Advanced role-fit score: 8.73/10."}, {"match_id": "ARG-1", "player": "Demo Striker 9", "team": "Argentina", "opponent": "Algeria", "position": "Center Forward", "role_group": "forward", "rating": "7.93", "confidence": "medium", "minutes": "74.0", "attacking_score": "0.5809", "possession_score": "0.1692", "defensive_score": "0.1715", "goalkeeping_score": "0.1214", "reasons": "forward weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: attacking score 0.58. | Advanced role-fit score: 6.92/10."}, {"match_id": "ARG-2", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Austria", "position": "Center Attacking Midfield", "role_group": "attacking_midfielder", "rating": "8.49", "confidence": "medium", "minutes": "78.0", "attacking_score": "0.4922", "possession_score": "0.7243", "defensive_score": "0.1064", "goalkeeping_score": "0.2071", "reasons": "attacking_midfielder weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.72. | Advanced role-fit score: 8.71/10."}, {"match_id": "ARG-2", "player": "Demo Striker 9", "team": "Argentina", "opponent": "Austria", "position": "Center Forward", "role_group": "forward", "rating": "7.64", "confidence": "medium", "minutes": "76.0", "attacking_score": "0.4934", "possession_score": "0.1847", "defensive_score": "0.0859", "goalkeeping_score": "0.1", "reasons": "forward weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: attacking score 0.49. | Advanced role-fit score: 5.80/10."}, {"match_id": "ARG-3", "player": "Demo Controller 8", "team": "Argentina", "opponent": "Jordan", "position": "Center Midfield", "role_group": "central_midfielder", "rating": "7.71", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.1232", "possession_score": "0.5312", "defensive_score": "0.4287", "goalkeeping_score": "0.2214", "reasons": "central_midfielder weighted most toward possession_score, defensive_score, attacking_score. | Strongest component: possession score 0.53. | Advanced role-fit score: 7.49/10."}, {"match_id": "ARG-3", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Jordan", "position": "Center Attacking Midfield", "role_group": "attacking_midfielder", "rating": "8.45", "confidence": "medium", "minutes": "80.0", "attacking_score": "0.5624", "possession_score": "0.7348", "defensive_score": "0.0478", "goalkeeping_score": "0.1714", "reasons": "attacking_midfielder weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.73. | Advanced role-fit score: 8.41/10."}, {"match_id": "ARG-4", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Senegal", "position": "Center Attacking Midfield", "role_group": "attacking_midfielder", "rating": "7.89", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.3986", "possession_score": "0.5044", "defensive_score": "0.1632", "goalkeeping_score": "0.1929", "reasons": "attacking_midfielder weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.50. | Advanced role-fit score: 7.10/10."}, {"match_id": "ARG-5", "player": "Demo Center Back 4", "team": "Argentina", "opponent": "Norway", "position": "Center Back", "role_group": "center_back", "rating": "7.64", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.029", "possession_score": "0.2711", "defensive_score": "0.5662", "goalkeeping_score": "0.2", "reasons": "center_back weighted most toward defensive_score, possession_score, attacking_score. | Strongest component: defensive score 0.57. | Advanced role-fit score: 6.65/10."}, {"match_id": "ARG-5", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Norway", "position": "Center Attacking Midfield", "role_group": "attacking_midfielder", "rating": "8.38", "confidence": "medium", "minutes": "82.0", "attacking_score": "0.5539", "possession_score": "0.6637", "defensive_score": "0.0549", "goalkeeping_score": "0.1786", "reasons": "attacking_midfielder weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.66. | Advanced role-fit score: 8.39/10."}, {"match_id": "AUT-1", "player": "Demo Austria Fullback 2", "team": "Austria", "opponent": "France", "position": "Right Back", "role_group": "full_back", "rating": "7.58", "confidence": "medium", "minutes": "86.0", "attacking_score": "0.0768", "possession_score": "0.434", "defensive_score": "0.4915", "goalkeeping_score": "0.1357", "reasons": "full_back weighted most toward defensive_score, possession_score, attacking_score. | Strongest component: defensive score 0.49. | Advanced role-fit score: 7.04/10."}, {"match_id": "AUT-1", "player": "Demo Austria Mid 8", "team": "Austria", "opponent": "Argentina", "position": "Center Midfield", "role_group": "central_midfielder", "rating": "7.87", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.351", "possession_score": "0.4846", "defensive_score": "0.3389", "goalkeeping_score": "0.1857", "reasons": "central_midfielder weighted most toward possession_score, defensive_score, attacking_score. | Strongest component: possession score 0.48. | Advanced role-fit score: 7.39/10."}, {"match_id": "BRA-1", "player": "Demo Brazil Center Back 3", "team": "Brazil", "opponent": "France", "position": "Center Back", "role_group": "center_back", "rating": "7.89", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.0263", "possession_score": "0.3106", "defensive_score": "0.6734", "goalkeeping_score": "0.2143", "reasons": "center_back weighted most toward defensive_score, possession_score, attacking_score. | Strongest component: defensive score 0.67. | Advanced role-fit score: 6.87/10."}, {"match_id": "BRA-1", "player": "Demo Brazil Creator 10", "team": "Brazil", "opponent": "France", "position": "Center Attacking Midfield", "role_group": "attacking_midfielder", "rating": "8.83", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.7102", "possession_score": "0.697", "defensive_score": "0.1557", "goalkeeping_score": "0.2", "reasons": "attacking_midfielder weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: attacking score 0.71. | Advanced role-fit score: 8.86/10."}, {"match_id": "FRA-1", "player": "Demo Winger 11", "team": "France", "opponent": "Senegal", "position": "Left Wing", "role_group": "winger", "rating": "8.35", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.5715", "possession_score": "0.5968", "defensive_score": "0.065", "goalkeeping_score": "0.1286", "reasons": "winger weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.60. | Advanced role-fit score: 8.25/10."}, {"match_id": "FRA-2", "player": "Demo Winger 11", "team": "France", "opponent": "Norway", "position": "Left Wing", "role_group": "winger", "rating": "8.09", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.4934", "possession_score": "0.5594", "defensive_score": "0.0575", "goalkeeping_score": "0.1429", "reasons": "winger weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.56. | Advanced role-fit score: 7.69/10."}, {"match_id": "FRA-3", "player": "Demo Playmaker 7", "team": "France", "opponent": "Iraq", "position": "Center Attacking Midfield", "role_group": "attacking_midfielder", "rating": "8.3", "confidence": "medium", "minutes": "88.0", "attacking_score": "0.4269", "possession_score": "0.5484", "defensive_score": "0.2382", "goalkeeping_score": "0.2143", "reasons": "attacking_midfielder weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.55. | Advanced role-fit score: 8.83/10."}, {"match_id": "FRA-3", "player": "Demo Winger 11", "team": "France", "opponent": "Iraq", "position": "Left Wing", "role_group": "winger", "rating": "8.76", "confidence": "medium", "minutes": "76.0", "attacking_score": "0.7289", "possession_score": "0.6852", "defensive_score": "0.0355", "goalkeeping_score": "0.1143", "reasons": "winger weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: attacking score 0.73. | Advanced role-fit score: 8.29/10."}, {"match_id": "FRA-4", "player": "Demo Anchor 6", "team": "France", "opponent": "Austria", "position": "Center Defensive Midfield", "role_group": "defensive_midfielder", "rating": "7.7", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.0761", "possession_score": "0.3909", "defensive_score": "0.5644", "goalkeeping_score": "0.2286", "reasons": "defensive_midfielder weighted most toward defensive_score, possession_score, attacking_score. | Strongest component: defensive score 0.56. | Advanced role-fit score: 6.97/10."}, {"match_id": "FRA-4", "player": "Demo Winger 11", "team": "France", "opponent": "Austria", "position": "Left Wing", "role_group": "winger", "rating": "8.9", "confidence": "medium", "minutes": "82.0", "attacking_score": "0.8025", "possession_score": "0.7225", "defensive_score": "0.1109", "goalkeeping_score": "0.1357", "reasons": "winger weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: attacking score 0.80. | Advanced role-fit score: 8.57/10."}, {"match_id": "FRA-5", "player": "Demo Winger 11", "team": "France", "opponent": "Brazil", "position": "Left Wing", "role_group": "winger", "rating": "7.18", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.1895", "possession_score": "0.4061", "defensive_score": "0.1147", "goalkeeping_score": "0.15", "reasons": "winger weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.41. | Advanced role-fit score: 5.22/10."}, {"match_id": "NOR-1", "player": "Demo Norway Keeper 1", "team": "Norway", "opponent": "Argentina", "position": "Goalkeeper", "role_group": "goalkeeper", "rating": "7.64", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.0", "possession_score": "0.0297", "defensive_score": "0.0", "goalkeeping_score": "0.55", "reasons": "goalkeeper weighted most toward goalkeeping_score, defensive_score, possession_score. | Strongest component: goalkeeping score 0.55. | Advanced role-fit score: 6.71/10."}, {"match_id": "NOR-1", "player": "Demo Norway Striker 9", "team": "Norway", "opponent": "France", "position": "Center Forward", "role_group": "forward", "rating": "7.69", "confidence": "medium", "minutes": "82.0", "attacking_score": "0.495", "possession_score": "0.125", "defensive_score": "0.1657", "goalkeeping_score": "0.0714", "reasons": "forward weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: attacking score 0.49. | Advanced role-fit score: 5.96/10."}, {"match_id": "SEN-1", "player": "Demo Senegal Anchor 6", "team": "Senegal", "opponent": "Argentina", "position": "Center Defensive Midfield", "role_group": "defensive_midfielder", "rating": "7.67", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.0734", "possession_score": "0.3363", "defensive_score": "0.6565", "goalkeeping_score": "0.1714", "reasons": "defensive_midfielder weighted most toward defensive_score, possession_score, attacking_score. | Strongest component: defensive score 0.66. | Advanced role-fit score: 6.51/10."}, {"match_id": "SEN-1", "player": "Demo Senegal Winger 11", "team": "Senegal", "opponent": "France", "position": "Right Wing", "role_group": "winger", "rating": "8.07", "confidence": "medium", "minutes": "90.0", "attacking_score": "0.4661", "possession_score": "0.5054", "defensive_score": "0.1782", "goalkeeping_score": "0.1143", "reasons": "winger weighted most toward attacking_score, possession_score, defensive_score. | Strongest component: possession score 0.51. | Advanced role-fit score: 7.94/10."}], "advanced": [{"match_id": "BRA-1", "player": "Demo Brazil Creator 10", "team": "Brazil", "opponent": "France", "role_group": "attacking_midfielder", "minutes": "90.0", "attacking_involvement": "10.0", "progression_value": "10.0", "ball_security": "7.51", "defensive_disruption": "3.83", "goalkeeping_value": "1.32", "two_way_value": "7.22", "xg_efficiency": "6.28", "usage_rate": "7.81", "role_fit_score": "8.86", "per90_summary_json": "{\"assists\": 1.0, \"chance_creation\": 5.0, \"goals\": 1.0, \"interceptions\": 1.0, \"pressures\": 5.0, \"progressive_carries\": 5.0, \"progressive_passes\": 9.0, \"recoveries\": 2.0, \"shots\": 3.0, \"successful_dribbles\": 2.0, \"tackles\": 1.0, \"xg\": 0.36}"}, {"match_id": "FRA-3", "player": "Demo Playmaker 7", "team": "France", "opponent": "Iraq", "role_group": "attacking_midfielder", "minutes": "88.0", "attacking_involvement": "10.0", "progression_value": "9.34", "ball_security": "7.19", "defensive_disruption": "5.83", "goalkeeping_value": "1.4", "two_way_value": "7.76", "xg_efficiency": "4.76", "usage_rate": "6.52", "role_fit_score": "8.83", "per90_summary_json": "{\"assists\": 2.045, \"chance_creation\": 5.114, \"goals\": 0.0, \"interceptions\": 2.045, \"pressures\": 7.159, \"progressive_carries\": 2.045, \"progressive_passes\": 9.205, \"recoveries\": 3.068, \"shots\": 1.023, \"successful_dribbles\": 1.023, \"tackles\": 1.023, \"xg\": 0.123}"}, {"match_id": "ARG-1", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Algeria", "role_group": "attacking_midfielder", "minutes": "84.0", "attacking_involvement": "10.0", "progression_value": "10.0", "ball_security": "7.27", "defensive_disruption": "3.08", "goalkeeping_value": "1.24", "two_way_value": "6.89", "xg_efficiency": "6.1", "usage_rate": "7.57", "role_fit_score": "8.73", "per90_summary_json": "{\"assists\": 1.071, \"chance_creation\": 4.286, \"goals\": 1.071, \"interceptions\": 0.0, \"pressures\": 5.357, \"progressive_carries\": 5.357, \"progressive_passes\": 8.571, \"recoveries\": 2.143, \"shots\": 3.214, \"successful_dribbles\": 2.143, \"tackles\": 1.071, \"xg\": 0.482}"}, {"match_id": "ARG-2", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Austria", "role_group": "attacking_midfielder", "minutes": "78.0", "attacking_involvement": "10.0", "progression_value": "10.0", "ball_security": "7.53", "defensive_disruption": "2.54", "goalkeeping_value": "1.36", "two_way_value": "6.64", "xg_efficiency": "4.56", "usage_rate": "7.3", "role_fit_score": "8.71", "per90_summary_json": "{\"assists\": 2.308, \"chance_creation\": 5.769, \"goals\": 0.0, \"interceptions\": 1.154, \"pressures\": 4.615, \"progressive_carries\": 4.615, \"progressive_passes\": 10.385, \"recoveries\": 1.154, \"shots\": 2.308, \"successful_dribbles\": 2.308, \"tackles\": 0.0, \"xg\": 0.254}"}, {"match_id": "FRA-4", "player": "Demo Winger 11", "team": "France", "opponent": "Austria", "role_group": "winger", "minutes": "82.0", "attacking_involvement": "10.0", "progression_value": "10.0", "ball_security": "6.62", "defensive_disruption": "2.7", "goalkeeping_value": "0.96", "two_way_value": "6.71", "xg_efficiency": "6.02", "usage_rate": "8.2", "role_fit_score": "8.57", "per90_summary_json": "{\"assists\": 1.098, \"chance_creation\": 4.39, \"goals\": 1.098, \"interceptions\": 0.0, \"pressures\": 6.585, \"progressive_carries\": 7.683, \"progressive_passes\": 4.39, \"recoveries\": 1.098, \"shots\": 4.39, \"successful_dribbles\": 4.39, \"tackles\": 1.098, \"xg\": 0.538}"}, {"match_id": "ARG-3", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Jordan", "role_group": "attacking_midfielder", "minutes": "80.0", "attacking_involvement": "9.78", "progression_value": "10.0", "ball_security": "7.19", "defensive_disruption": "1.21", "goalkeeping_value": "1.16", "two_way_value": "6.04", "xg_efficiency": "6.26", "usage_rate": "7.51", "role_fit_score": "8.41", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 3.375, \"goals\": 1.125, \"interceptions\": 0.0, \"pressures\": 3.375, \"progressive_carries\": 6.75, \"progressive_passes\": 6.75, \"recoveries\": 1.125, \"shots\": 4.5, \"successful_dribbles\": 3.375, \"tackles\": 0.0, \"xg\": 0.416}"}, {"match_id": "ARG-5", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Norway", "role_group": "attacking_midfielder", "minutes": "82.0", "attacking_involvement": "9.79", "progression_value": "10.0", "ball_security": "6.94", "defensive_disruption": "1.36", "goalkeeping_value": "1.2", "two_way_value": "6.11", "xg_efficiency": "6.38", "usage_rate": "7.49", "role_fit_score": "8.39", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 4.39, \"goals\": 1.098, \"interceptions\": 0.0, \"pressures\": 4.39, \"progressive_carries\": 4.39, \"progressive_passes\": 8.78, \"recoveries\": 1.098, \"shots\": 3.293, \"successful_dribbles\": 2.195, \"tackles\": 0.0, \"xg\": 0.34}"}, {"match_id": "FRA-3", "player": "Demo Winger 11", "team": "France", "opponent": "Iraq", "role_group": "winger", "minutes": "76.0", "attacking_involvement": "10.0", "progression_value": "10.0", "ball_security": "6.47", "defensive_disruption": "0.79", "goalkeeping_value": "0.84", "two_way_value": "5.86", "xg_efficiency": "7.52", "usage_rate": "7.1", "role_fit_score": "8.29", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 2.368, \"goals\": 2.368, \"interceptions\": 0.0, \"pressures\": 4.737, \"progressive_carries\": 9.474, \"progressive_passes\": 2.368, \"recoveries\": 0.0, \"shots\": 7.105, \"successful_dribbles\": 5.921, \"tackles\": 0.0, \"xg\": 0.876}"}, {"match_id": "FRA-1", "player": "Demo Winger 11", "team": "France", "opponent": "Senegal", "role_group": "winger", "minutes": "90.0", "attacking_involvement": "9.68", "progression_value": "10.0", "ball_security": "6.24", "defensive_disruption": "1.57", "goalkeeping_value": "0.92", "two_way_value": "6.21", "xg_efficiency": "5.9", "usage_rate": "6.95", "role_fit_score": "8.25", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 3.0, \"goals\": 1.0, \"interceptions\": 0.0, \"pressures\": 6.0, \"progressive_carries\": 7.0, \"progressive_passes\": 2.0, \"recoveries\": 1.0, \"shots\": 5.0, \"successful_dribbles\": 4.0, \"tackles\": 0.0, \"xg\": 0.55}"}, {"match_id": "SEN-1", "player": "Demo Senegal Winger 11", "team": "Senegal", "opponent": "France", "role_group": "winger", "minutes": "90.0", "attacking_involvement": "7.96", "progression_value": "10.0", "ball_security": "5.53", "defensive_disruption": "4.33", "goalkeeping_value": "0.84", "two_way_value": "7.45", "xg_efficiency": "6.18", "usage_rate": "5.88", "role_fit_score": "7.94", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 2.0, \"goals\": 1.0, \"interceptions\": 1.0, \"pressures\": 8.0, \"progressive_carries\": 6.0, \"progressive_passes\": 2.0, \"recoveries\": 2.0, \"shots\": 4.0, \"successful_dribbles\": 3.0, \"tackles\": 1.0, \"xg\": 0.41}"}, {"match_id": "FRA-2", "player": "Demo Winger 11", "team": "France", "opponent": "Norway", "role_group": "winger", "minutes": "90.0", "attacking_involvement": "8.12", "progression_value": "10.0", "ball_security": "6.43", "defensive_disruption": "1.41", "goalkeeping_value": "1.0", "two_way_value": "6.13", "xg_efficiency": "4.44", "usage_rate": "6.3", "role_fit_score": "7.69", "per90_summary_json": "{\"assists\": 1.0, \"chance_creation\": 4.0, \"goals\": 0.0, \"interceptions\": 0.0, \"pressures\": 5.0, \"progressive_carries\": 6.0, \"progressive_passes\": 3.0, \"recoveries\": 1.0, \"shots\": 3.0, \"successful_dribbles\": 3.0, \"tackles\": 0.0, \"xg\": 0.28}"}, {"match_id": "ARG-3", "player": "Demo Controller 8", "team": "Argentina", "opponent": "Jordan", "role_group": "central_midfielder", "minutes": "90.0", "attacking_involvement": "2.29", "progression_value": "8.91", "ball_security": "7.18", "defensive_disruption": "10.0", "goalkeeping_value": "1.44", "two_way_value": "5.93", "xg_efficiency": "4.92", "usage_rate": "4.98", "role_fit_score": "7.49", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 2.0, \"goals\": 0.0, \"interceptions\": 3.0, \"pressures\": 6.0, \"progressive_carries\": 2.0, \"progressive_passes\": 10.0, \"recoveries\": 7.0, \"shots\": 1.0, \"successful_dribbles\": 0.0, \"tackles\": 2.0, \"xg\": 0.04}"}, {"match_id": "AUT-1", "player": "Demo Austria Mid 8", "team": "Austria", "opponent": "Argentina", "role_group": "central_midfielder", "minutes": "90.0", "attacking_involvement": "5.79", "progression_value": "8.38", "ball_security": "6.28", "defensive_disruption": "8.48", "goalkeeping_value": "1.24", "two_way_value": "7.21", "xg_efficiency": "4.82", "usage_rate": "5.02", "role_fit_score": "7.39", "per90_summary_json": "{\"assists\": 1.0, \"chance_creation\": 3.0, \"goals\": 0.0, \"interceptions\": 2.0, \"pressures\": 5.0, \"progressive_carries\": 2.0, \"progressive_passes\": 8.0, \"recoveries\": 5.0, \"shots\": 1.0, \"successful_dribbles\": 1.0, \"tackles\": 2.0, \"xg\": 0.09}"}, {"match_id": "ARG-4", "player": "Demo Creator 10", "team": "Argentina", "opponent": "Senegal", "role_group": "attacking_midfielder", "minutes": "90.0", "attacking_involvement": "6.51", "progression_value": "8.98", "ball_security": "6.81", "defensive_disruption": "4.0", "goalkeeping_value": "1.28", "two_way_value": "6.74", "xg_efficiency": "4.64", "usage_rate": "5.58", "role_fit_score": "7.1", "per90_summary_json": "{\"assists\": 1.0, \"chance_creation\": 3.0, \"goals\": 0.0, \"interceptions\": 1.0, \"pressures\": 6.0, \"progressive_carries\": 3.0, \"progressive_passes\": 7.0, \"recoveries\": 2.0, \"shots\": 2.0, \"successful_dribbles\": 1.0, \"tackles\": 1.0, \"xg\": 0.18}"}, {"match_id": "AUT-1", "player": "Demo Austria Fullback 2", "team": "Austria", "opponent": "France", "role_group": "full_back", "minutes": "86.0", "attacking_involvement": "1.43", "progression_value": "8.17", "ball_security": "5.6", "defensive_disruption": "10.0", "goalkeeping_value": "0.96", "two_way_value": "5.14", "xg_efficiency": "4.96", "usage_rate": "3.81", "role_fit_score": "7.04", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 1.047, \"goals\": 0.0, \"interceptions\": 3.14, \"pressures\": 6.279, \"progressive_carries\": 3.14, \"progressive_passes\": 5.233, \"recoveries\": 4.186, \"shots\": 1.047, \"successful_dribbles\": 1.047, \"tackles\": 3.14, \"xg\": 0.021}"}, {"match_id": "FRA-4", "player": "Demo Anchor 6", "team": "France", "opponent": "Austria", "role_group": "defensive_midfielder", "minutes": "90.0", "attacking_involvement": "1.4", "progression_value": "5.74", "ball_security": "7.01", "defensive_disruption": "10.0", "goalkeeping_value": "1.48", "two_way_value": "3.79", "xg_efficiency": "4.94", "usage_rate": "3.55", "role_fit_score": "6.97", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 1.0, \"goals\": 0.0, \"interceptions\": 4.0, \"pressures\": 5.0, \"progressive_carries\": 1.0, \"progressive_passes\": 7.0, \"recoveries\": 8.0, \"shots\": 1.0, \"successful_dribbles\": 0.0, \"tackles\": 3.0, \"xg\": 0.03}"}, {"match_id": "ARG-1", "player": "Demo Striker 9", "team": "Argentina", "opponent": "Algeria", "role_group": "forward", "minutes": "74.0", "attacking_involvement": "9.4", "progression_value": "2.43", "ball_security": "4.6", "defensive_disruption": "4.14", "goalkeeping_value": "0.88", "two_way_value": "3.2", "xg_efficiency": "5.76", "usage_rate": "4.9", "role_fit_score": "6.92", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 1.216, \"goals\": 1.216, \"interceptions\": 0.0, \"pressures\": 9.73, \"progressive_carries\": 1.216, \"progressive_passes\": 1.216, \"recoveries\": 1.216, \"shots\": 4.865, \"successful_dribbles\": 0.0, \"tackles\": 1.216, \"xg\": 0.754}"}, {"match_id": "BRA-1", "player": "Demo Brazil Center Back 3", "team": "Brazil", "opponent": "France", "role_group": "center_back", "minutes": "90.0", "attacking_involvement": "0.48", "progression_value": "3.96", "ball_security": "6.47", "defensive_disruption": "10.0", "goalkeeping_value": "1.4", "two_way_value": "2.39", "xg_efficiency": "4.98", "usage_rate": "2.12", "role_fit_score": "6.87", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 0.0, \"goals\": 0.0, \"interceptions\": 4.0, \"pressures\": 1.0, \"progressive_carries\": 0.0, \"progressive_passes\": 6.0, \"recoveries\": 6.0, \"shots\": 1.0, \"successful_dribbles\": 0.0, \"tackles\": 2.0, \"xg\": 0.01}"}, {"match_id": "NOR-1", "player": "Demo Norway Keeper 1", "team": "Norway", "opponent": "Argentina", "role_group": "goalkeeper", "minutes": "90.0", "attacking_involvement": "0.0", "progression_value": "0.0", "ball_security": "2.34", "defensive_disruption": "0.0", "goalkeeping_value": "10.0", "two_way_value": "0.0", "xg_efficiency": "5.0", "usage_rate": "0.0", "role_fit_score": "6.71", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 0.0, \"goals\": 0.0, \"interceptions\": 0.0, \"pressures\": 0.0, \"progressive_carries\": 0.0, \"progressive_passes\": 0.0, \"recoveries\": 0.0, \"shots\": 0.0, \"successful_dribbles\": 0.0, \"tackles\": 0.0, \"xg\": 0.0}"}, {"match_id": "ARG-5", "player": "Demo Center Back 4", "team": "Argentina", "opponent": "Norway", "role_group": "center_back", "minutes": "90.0", "attacking_involvement": "0.51", "progression_value": "3.32", "ball_security": "6.11", "defensive_disruption": "10.0", "goalkeeping_value": "1.32", "two_way_value": "2.06", "xg_efficiency": "4.96", "usage_rate": "1.9", "role_fit_score": "6.65", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 0.0, \"goals\": 0.0, \"interceptions\": 3.0, \"pressures\": 1.0, \"progressive_carries\": 0.0, \"progressive_passes\": 5.0, \"recoveries\": 5.0, \"shots\": 1.0, \"successful_dribbles\": 0.0, \"tackles\": 2.0, \"xg\": 0.02}"}, {"match_id": "SEN-1", "player": "Demo Senegal Anchor 6", "team": "Senegal", "opponent": "Argentina", "role_group": "defensive_midfielder", "minutes": "90.0", "attacking_involvement": "1.37", "progression_value": "5.21", "ball_security": "5.75", "defensive_disruption": "10.0", "goalkeeping_value": "1.16", "two_way_value": "3.48", "xg_efficiency": "4.96", "usage_rate": "3.61", "role_fit_score": "6.51", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 1.0, \"goals\": 0.0, \"interceptions\": 5.0, \"pressures\": 7.0, \"progressive_carries\": 1.0, \"progressive_passes\": 6.0, \"recoveries\": 9.0, \"shots\": 1.0, \"successful_dribbles\": 0.0, \"tackles\": 4.0, \"xg\": 0.02}"}, {"match_id": "ALG-1", "player": "Demo Algeria Back 5", "team": "Algeria", "opponent": "Argentina", "role_group": "center_back", "minutes": "90.0", "attacking_involvement": "0.03", "progression_value": "2.68", "ball_security": "5.03", "defensive_disruption": "10.0", "goalkeeping_value": "1.08", "two_way_value": "1.49", "xg_efficiency": "4.98", "usage_rate": "1.31", "role_fit_score": "6.2", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 0.0, \"goals\": 0.0, \"interceptions\": 4.0, \"pressures\": 2.0, \"progressive_carries\": 0.0, \"progressive_passes\": 4.0, \"recoveries\": 6.0, \"shots\": 0.0, \"successful_dribbles\": 0.0, \"tackles\": 3.0, \"xg\": 0.01}"}, {"match_id": "NOR-1", "player": "Demo Norway Striker 9", "team": "Norway", "opponent": "France", "role_group": "forward", "minutes": "82.0", "attacking_involvement": "8.15", "progression_value": "2.07", "ball_security": "3.08", "defensive_disruption": "4.04", "goalkeeping_value": "0.6", "two_way_value": "2.96", "xg_efficiency": "5.96", "usage_rate": "4.23", "role_fit_score": "5.96", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 1.098, \"goals\": 1.098, \"interceptions\": 0.0, \"pressures\": 6.585, \"progressive_carries\": 1.098, \"progressive_passes\": 1.098, \"recoveries\": 1.098, \"shots\": 4.39, \"successful_dribbles\": 0.0, \"tackles\": 1.098, \"xg\": 0.571}"}, {"match_id": "ARG-2", "player": "Demo Striker 9", "team": "Argentina", "opponent": "Austria", "role_group": "forward", "minutes": "76.0", "attacking_involvement": "8.12", "progression_value": "2.99", "ball_security": "3.83", "defensive_disruption": "2.06", "goalkeeping_value": "0.76", "two_way_value": "2.57", "xg_efficiency": "6.04", "usage_rate": "4.15", "role_fit_score": "5.8", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 1.184, \"goals\": 1.184, \"interceptions\": 0.0, \"pressures\": 8.289, \"progressive_carries\": 1.184, \"progressive_passes\": 2.368, \"recoveries\": 1.184, \"shots\": 3.553, \"successful_dribbles\": 0.0, \"tackles\": 0.0, \"xg\": 0.568}"}, {"match_id": "FRA-5", "player": "Demo Winger 11", "team": "France", "opponent": "Brazil", "role_group": "winger", "minutes": "90.0", "attacking_involvement": "3.21", "progression_value": "7.77", "ball_security": "6.08", "defensive_disruption": "2.7", "goalkeeping_value": "1.04", "two_way_value": "5.49", "xg_efficiency": "4.6", "usage_rate": "4.15", "role_fit_score": "5.22", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 2.0, \"goals\": 0.0, \"interceptions\": 1.0, \"pressures\": 7.0, \"progressive_carries\": 4.0, \"progressive_passes\": 2.0, \"recoveries\": 1.0, \"shots\": 2.0, \"successful_dribbles\": 2.0, \"tackles\": 0.0, \"xg\": 0.2}"}, {"match_id": "ALG-1", "player": "Demo Algeria Forward 9", "team": "Algeria", "opponent": "Argentina", "role_group": "forward", "minutes": "88.0", "attacking_involvement": "3.21", "progression_value": "3.98", "ball_security": "3.78", "defensive_disruption": "3.66", "goalkeeping_value": "0.68", "two_way_value": "3.63", "xg_efficiency": "4.38", "usage_rate": "3.86", "role_fit_score": "3.47", "per90_summary_json": "{\"assists\": 0.0, \"chance_creation\": 1.023, \"goals\": 0.0, \"interceptions\": 0.0, \"pressures\": 9.205, \"progressive_carries\": 2.045, \"progressive_passes\": 1.023, \"recoveries\": 1.023, \"shots\": 3.068, \"successful_dribbles\": 1.023, \"tackles\": 1.023, \"xg\": 0.317}"}], "teamStats": [{"match_id": "ARG-1", "date": "2026-06-16", "team": "Argentina", "opponent": "Algeria", "goals_for": "2", "goals_against": "0", "xg_for": "1.9", "xg_against": "0.8", "shots_for": "15", "shots_against": "7", "progressive_passes": "42", "progressive_carries": "19", "defensive_actions": "31", "venue": "neutral", "source": "sample"}, {"match_id": "ARG-2", "date": "2026-06-21", "team": "Argentina", "opponent": "Austria", "goals_for": "3", "goals_against": "1", "xg_for": "2.2", "xg_against": "1.0", "shots_for": "17", "shots_against": "8", "progressive_passes": "45", "progressive_carries": "22", "defensive_actions": "29", "venue": "neutral", "source": "sample"}, {"match_id": "ARG-3", "date": "2026-06-26", "team": "Argentina", "opponent": "Jordan", "goals_for": "2", "goals_against": "1", "xg_for": "1.7", "xg_against": "0.9", "shots_for": "13", "shots_against": "9", "progressive_passes": "39", "progressive_carries": "18", "defensive_actions": "33", "venue": "neutral", "source": "sample"}, {"match_id": "ARG-4", "date": "2026-06-30", "team": "Argentina", "opponent": "Senegal", "goals_for": "1", "goals_against": "1", "xg_for": "1.4", "xg_against": "1.1", "shots_for": "11", "shots_against": "10", "progressive_passes": "35", "progressive_carries": "17", "defensive_actions": "35", "venue": "neutral", "source": "sample"}, {"match_id": "ARG-5", "date": "2026-07-04", "team": "Argentina", "opponent": "Norway", "goals_for": "2", "goals_against": "1", "xg_for": "1.8", "xg_against": "1.2", "shots_for": "14", "shots_against": "10", "progressive_passes": "41", "progressive_carries": "20", "defensive_actions": "32", "venue": "neutral", "source": "sample"}, {"match_id": "FRA-1", "date": "2026-06-16", "team": "France", "opponent": "Senegal", "goals_for": "2", "goals_against": "1", "xg_for": "1.7", "xg_against": "1.0", "shots_for": "14", "shots_against": "9", "progressive_passes": "37", "progressive_carries": "21", "defensive_actions": "28", "venue": "neutral", "source": "sample"}, {"match_id": "FRA-2", "date": "2026-06-21", "team": "France", "opponent": "Norway", "goals_for": "1", "goals_against": "1", "xg_for": "1.3", "xg_against": "1.1", "shots_for": "12", "shots_against": "11", "progressive_passes": "34", "progressive_carries": "18", "defensive_actions": "30", "venue": "neutral", "source": "sample"}, {"match_id": "FRA-3", "date": "2026-06-26", "team": "France", "opponent": "Iraq", "goals_for": "3", "goals_against": "0", "xg_for": "2.4", "xg_against": "0.7", "shots_for": "18", "shots_against": "6", "progressive_passes": "44", "progressive_carries": "24", "defensive_actions": "27", "venue": "neutral", "source": "sample"}, {"match_id": "FRA-4", "date": "2026-06-30", "team": "France", "opponent": "Austria", "goals_for": "2", "goals_against": "0", "xg_for": "1.8", "xg_against": "0.6", "shots_for": "16", "shots_against": "6", "progressive_passes": "40", "progressive_carries": "22", "defensive_actions": "31", "venue": "neutral", "source": "sample"}, {"match_id": "FRA-5", "date": "2026-07-04", "team": "France", "opponent": "Brazil", "goals_for": "1", "goals_against": "2", "xg_for": "1.2", "xg_against": "1.7", "shots_for": "10", "shots_against": "14", "progressive_passes": "31", "progressive_carries": "16", "defensive_actions": "34", "venue": "neutral", "source": "sample"}, {"match_id": "ALG-1", "date": "2026-06-16", "team": "Algeria", "opponent": "Argentina", "goals_for": "0", "goals_against": "2", "xg_for": "0.8", "xg_against": "1.9", "shots_for": "7", "shots_against": "15", "progressive_passes": "20", "progressive_carries": "9", "defensive_actions": "38", "venue": "neutral", "source": "sample"}, {"match_id": "AUT-1", "date": "2026-06-21", "team": "Austria", "opponent": "Argentina", "goals_for": "1", "goals_against": "3", "xg_for": "1.0", "xg_against": "2.2", "shots_for": "8", "shots_against": "17", "progressive_passes": "25", "progressive_carries": "12", "defensive_actions": "36", "venue": "neutral", "source": "sample"}, {"match_id": "AUT-2", "date": "2026-06-30", "team": "Austria", "opponent": "France", "goals_for": "0", "goals_against": "2", "xg_for": "0.6", "xg_against": "1.8", "shots_for": "6", "shots_against": "16", "progressive_passes": "22", "progressive_carries": "10", "defensive_actions": "39", "venue": "neutral", "source": "sample"}, {"match_id": "SEN-1", "date": "2026-06-16", "team": "Senegal", "opponent": "France", "goals_for": "1", "goals_against": "2", "xg_for": "1.0", "xg_against": "1.7", "shots_for": "9", "shots_against": "14", "progressive_passes": "28", "progressive_carries": "14", "defensive_actions": "34", "venue": "neutral", "source": "sample"}, {"match_id": "SEN-2", "date": "2026-06-30", "team": "Senegal", "opponent": "Argentina", "goals_for": "1", "goals_against": "1", "xg_for": "1.1", "xg_against": "1.4", "shots_for": "10", "shots_against": "11", "progressive_passes": "30", "progressive_carries": "15", "defensive_actions": "37", "venue": "neutral", "source": "sample"}, {"match_id": "NOR-1", "date": "2026-06-21", "team": "Norway", "opponent": "France", "goals_for": "1", "goals_against": "1", "xg_for": "1.1", "xg_against": "1.3", "shots_for": "11", "shots_against": "12", "progressive_passes": "27", "progressive_carries": "13", "defensive_actions": "35", "venue": "neutral", "source": "sample"}, {"match_id": "NOR-2", "date": "2026-07-04", "team": "Norway", "opponent": "Argentina", "goals_for": "1", "goals_against": "2", "xg_for": "1.2", "xg_against": "1.8", "shots_for": "10", "shots_against": "14", "progressive_passes": "29", "progressive_carries": "14", "defensive_actions": "36", "venue": "neutral", "source": "sample"}, {"match_id": "BRA-1", "date": "2026-07-04", "team": "Brazil", "opponent": "France", "goals_for": "2", "goals_against": "1", "xg_for": "1.7", "xg_against": "1.2", "shots_for": "14", "shots_against": "10", "progressive_passes": "38", "progressive_carries": "20", "defensive_actions": "31", "venue": "neutral", "source": "sample"}], "prediction": {"home_team": "Argentina", "away_team": "France", "expected_home_goals": 1.577, "expected_away_goals": 1.324, "home_win": 0.434, "draw": 0.246, "away_win": 0.32, "top_scorelines": [{"home_goals": 1, "away_goals": 1, "score": "1-1", "probability": 0.1148}, {"home_goals": 2, "away_goals": 1, "score": "2-1", "probability": 0.0905}, {"home_goals": 1, "away_goals": 0, "score": "1-0", "probability": 0.0867}, {"home_goals": 1, "away_goals": 2, "score": "1-2", "probability": 0.076}, {"home_goals": 0, "away_goals": 1, "score": "0-1", "probability": 0.0728}], "confidence": "high", "reasons": ["Argentina attack profile: 1.75 recent xG, 13.6 shots.", "France defense profile: 1.09 xG conceded, 9.6 shots allowed.", "France attack profile: 1.63 recent xG, 13.6 shots.", "Recent form points: Argentina 2.51, France 1.73."]}, "validation": {"sample_size": 10, "mae": 0.157, "correlation": 0.916, "within_half_point_rate": 1.0, "missing_external_rows": 0}, "backtest": {"matches": 3, "exact_score_top3_rate": 1.0, "outcome_accuracy": 0.667, "brier_score": 0.202, "log_loss": 1.021, "calibration": [{"bucket": "30-40%", "count": 1, "accuracy": 0.0}, {"bucket": "40-50%", "count": 2, "accuracy": 1.0}]}}</script>
+  <script>
+    const app = JSON.parse(document.getElementById('app-data').textContent);
+    const $ = (id) => document.getElementById(id);
+    const num = (v) => Number.parseFloat(v || 0) || 0;
+    const fmt = (v, d = 2) => num(v).toFixed(d);
+    const pct = (v) => `${(num(v) * 100).toFixed(1)}%`;
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+    function teams() {
+      return [...new Set([
+        ...app.overall.map(r => r.team),
+        ...app.games.map(r => r.team),
+        ...app.teamStats.map(r => r.team)
+      ].filter(Boolean))].sort();
+    }
+    function roles() {
+      return ['All roles', ...new Set(app.overall.map(r => r.role_group).filter(Boolean))].sort();
+    }
+    function players() {
+      return app.overall.slice().sort((a,b) => num(b.weighted_rating)-num(a.weighted_rating));
+    }
+    function advFor(player, team) {
+      const rows = app.advanced.filter(r => r.player === player && r.team === team);
+      if (!rows.length) return {};
+      const avg = (field) => rows.reduce((s,r) => s + num(r[field]), 0) / rows.length;
+      return {
+        role_fit_score: avg('role_fit_score'),
+        attacking_involvement: avg('attacking_involvement'),
+        progression_value: avg('progression_value'),
+        ball_security: avg('ball_security'),
+        defensive_disruption: avg('defensive_disruption'),
+        two_way_value: avg('two_way_value'),
+        usage_rate: avg('usage_rate'),
+        xg_efficiency: avg('xg_efficiency')
+      };
+    }
+    function teamProfile(team) {
+      const overall = app.overall.filter(r => r.team === team);
+      const games = app.games.filter(r => r.team === team);
+      const advanced = app.advanced.filter(r => r.team === team);
+      const teamStats = app.teamStats.filter(r => r.team === team);
+      const avg = (rows, field) => rows.length ? rows.reduce((s,r) => s + num(r[field]), 0) / rows.length : 0;
+      return {
+        team,
+        players: overall.length,
+        playerGames: games.length,
+        avgRating: avg(overall, 'weighted_rating'),
+        best: overall.slice().sort((a,b) => num(b.weighted_rating)-num(a.weighted_rating))[0],
+        attack: avg(advanced, 'attacking_involvement'),
+        progression: avg(advanced, 'progression_value'),
+        security: avg(advanced, 'ball_security'),
+        defense: avg(advanced, 'defensive_disruption'),
+        usage: avg(advanced, 'usage_rate'),
+        xgFor: avg(teamStats, 'xg_for'),
+        xgAgainst: avg(teamStats, 'xg_against'),
+        shotsFor: avg(teamStats, 'shots_for'),
+        shotsAgainst: avg(teamStats, 'shots_against'),
+        roster: overall
+      };
+    }
+    function confidenceClass(v) {
+      const text = String(v || '').toLowerCase();
+      if (text === 'high') return '';
+      if (text === 'medium') return 'warn';
+      return 'risk';
+    }
+    function bar(label, value, max = 10) {
+      const width = Math.max(0, Math.min(100, max ? value / max * 100 : 0));
+      return `<div class="bar-row"><span>${esc(label)}</span><div class="bar-track"><i style="width:${width}%"></i></div><strong>${fmt(value)}</strong></div>`;
+    }
+    function sparkline(values) {
+      if (!values.length) return '<svg class="sparkline"></svg>';
+      const w = 220, h = 58, min = Math.min(...values), max = Math.max(...values), span = Math.max(max-min, .01);
+      const points = values.map((v,i) => `${values.length === 1 ? w/2 : i*(w/(values.length-1))},${h - ((v-min)/span*(h-12)) - 6}`).join(' ');
+      return `<svg class="sparkline" viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`;
+    }
+    function radar(values) {
+      const labels = ['attacking_involvement','progression_value','defensive_disruption','ball_security'];
+      const size=120, c=60, r=42;
+      const axes = labels.map((_,i) => {
+        const a = -Math.PI/2 + i * Math.PI/2;
+        return `<line x1="${c}" y1="${c}" x2="${c+r*Math.cos(a)}" y2="${c+r*Math.sin(a)}"></line>`;
+      }).join('');
+      const points = labels.map((key,i) => {
+        const a = -Math.PI/2 + i * Math.PI/2;
+        const v = Math.max(0, Math.min(1, num(values[key])/10));
+        return `${c+r*v*Math.cos(a)},${c+r*v*Math.sin(a)}`;
+      }).join(' ');
+      return `<svg class="radar" viewBox="0 0 ${size} ${size}"><circle cx="${c}" cy="${c}" r="${r}"></circle>${axes}<polygon points="${points}"></polygon></svg>`;
+    }
+    function playerTrend(player, team) {
+      return app.games
+        .filter(r => r.player === player && r.team === team)
+        .sort((a,b) => String(a.match_id).localeCompare(String(b.match_id)))
+        .map(r => num(r.rating));
+    }
+    function populateControls() {
+      const teamOptions = teams().map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+      $('teamA').innerHTML = teamOptions;
+      $('teamB').innerHTML = teamOptions;
+      if (teams()[1]) $('teamB').value = teams()[1];
+      $('roleFilter').innerHTML = roles().map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+      const playerOptions = players().map(p => `<option value="${esc(p.player)}|||${esc(p.team)}">${esc(p.player)} · ${esc(p.team)}</option>`).join('');
+      $('playerA').innerHTML = playerOptions;
+      $('playerB').innerHTML = playerOptions;
+      if (players()[1]) $('playerB').selectedIndex = 1;
+    }
+    function renderBanner() {
+      const demo = [...app.overall, ...app.games].some(r => String(r.player || '').startsWith('Demo '));
+      $('dataBanner').className = `data-banner ${demo ? '' : 'verified'}`;
+      $('dataBanner').innerHTML = demo
+        ? '<strong>Demo data view</strong><br>This page is using synthetic sample players. Import verified roster, lineup, event, and rating data before treating analysis as real.'
+        : '<strong>Imported data view</strong><br>Data appears imported. Interpret results according to source coverage and validation quality.';
+    }
+    function renderKpis() {
+      const top = players()[0] || {};
+      const bestGame = app.games.slice().sort((a,b) => num(b.rating)-num(a.rating))[0] || {};
+      $('kpis').innerHTML = [
+        ['Teams', teams().length, 'loaded teams'],
+        ['Players', app.overall.length, 'searchable players'],
+        ['Player Games', app.games.length, 'rated match rows'],
+        ['Advanced Rows', app.advanced.length, 'role-fit profiles'],
+        ['Top Rating', fmt(top.weighted_rating), `${top.player || 'n/a'} · ${top.team || ''}`],
+        ['Best Game', fmt(bestGame.rating), `${bestGame.player || 'n/a'} vs ${bestGame.opponent || ''}`],
+      ].map(([label,value,detail]) => `<section class="kpi"><span>${label}</span><strong>${value}</strong><small>${esc(detail)}</small></section>`).join('');
+    }
+    function renderPrediction() {
+      const p = app.prediction || {};
+      const topScores = (p.top_scorelines || []).map(s => bar(s.score, num(s.probability), Math.max(...(p.top_scorelines || []).map(x => num(x.probability)), .01))).join('');
+      $('predictionPanel').innerHTML = `
+        <div class="panel-head"><div><p class="eyebrow">Prediction snapshot</p><h2>${esc(p.home_team || 'Team A')} vs ${esc(p.away_team || 'Team B')}</h2></div><span class="pill">${esc(p.confidence || 'unknown')} confidence</span></div>
+        <div class="comparison-grid">
+          <div>${bar('Home win', num(p.home_win), 1)}${bar('Draw', num(p.draw), 1)}${bar('Away win', num(p.away_win), 1)}</div>
+          <div>${topScores}</div>
+        </div>`;
+    }
+    function teamCard(profile, side) {
+      const roster = profile.roster
+        .slice().sort((a,b) => num(b.weighted_rating)-num(a.weighted_rating))
+        .map(p => `<div class="roster-row"><div><strong>${esc(p.player)}</strong><span>${esc(p.role_group)} · ${fmt(p.minutes,0)} min</span></div><strong>${fmt(p.weighted_rating)}</strong></div>`)
+        .join('');
+      return `<article class="team-card">
+        <p class="eyebrow">${side}</p>
+        <h2>${esc(profile.team)}</h2>
+        <div class="score">${fmt(profile.avgRating)}</div>
+        <p class="subtle">${profile.players} players · ${profile.playerGames} player-games · top player ${esc(profile.best?.player || 'n/a')}</p>
+        ${bar('Attack', profile.attack)}${bar('Progression', profile.progression)}${bar('Security', profile.security)}${bar('Defense', profile.defense)}${bar('Usage', profile.usage)}
+        <h3>Roster</h3><div class="roster-list">${roster || '<p class="subtle">No players loaded for this team.</p>'}</div>
+      </article>`;
+    }
+    function renderTeamCompare() {
+      const a = teamProfile($('teamA').value);
+      const b = teamProfile($('teamB').value);
+      $('compare').innerHTML = teamCard(a, 'Team A') + teamCard(b, 'Team B');
+    }
+    function filteredPlayers() {
+      const term = $('playerSearch').value.toLowerCase().trim();
+      const role = $('roleFilter').value;
+      return players().filter(p => {
+        const haystack = `${p.player} ${p.team} ${p.role_group}`.toLowerCase();
+        const roleMatch = role === 'All roles' || p.role_group === role;
+        return roleMatch && (!term || haystack.includes(term));
+      });
+    }
+    function playerCard(p) {
+      const advanced = advFor(p.player, p.team);
+      return `<article class="player-card">
+        <div class="player-card-head"><div><h3>${esc(p.player)}</h3><span>${esc(p.team)} · ${esc(p.role_group)}</span></div><strong>${fmt(p.weighted_rating)}</strong></div>
+        ${sparkline(playerTrend(p.player, p.team))}
+        <div style="display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center;margin-top:10px">${radar(advanced)}<div>${bar('Role fit', num(advanced.role_fit_score))}${bar('Usage', num(advanced.usage_rate))}${bar('Two-way', num(advanced.two_way_value))}</div></div>
+      </article>`;
+    }
+    function renderPlayers() {
+      const rows = filteredPlayers();
+      $('playerCount').textContent = `${rows.length} players`;
+      $('playerCards').innerHTML = rows.slice(0, 8).map(playerCard).join('');
+      $('playerTable').innerHTML = rows.map(p => {
+        const advanced = advFor(p.player, p.team);
+        return `<tr><td><strong>${esc(p.player)}</strong></td><td>${esc(p.team)}</td><td>${esc(p.role_group)}</td><td>${esc(p.matches)}</td><td>${fmt(p.minutes,0)}</td><td><strong>${fmt(p.weighted_rating)}</strong></td><td>${fmt(advanced.role_fit_score)}</td><td>${fmt(advanced.usage_rate)}</td><td><span class="tag ${confidenceClass(p.confidence)}">${esc(p.confidence)}</span></td></tr>`;
+      }).join('');
+    }
+    function playerBySelect(id) {
+      const [player, team] = $(id).value.split('|||');
+      return app.overall.find(p => p.player === player && p.team === team) || {};
+    }
+    function playerCompareCard(p, label) {
+      const advanced = advFor(p.player, p.team);
+      return `<article class="player-card"><p class="eyebrow">${label}</p><div class="player-card-head"><div><h3>${esc(p.player || 'n/a')}</h3><span>${esc(p.team || '')} · ${esc(p.role_group || '')}</span></div><strong>${fmt(p.weighted_rating)}</strong></div>${sparkline(playerTrend(p.player, p.team))}${bar('Role fit', num(advanced.role_fit_score))}${bar('Attack', num(advanced.attacking_involvement))}${bar('Progression', num(advanced.progression_value))}${bar('Defense', num(advanced.defensive_disruption))}${bar('Security', num(advanced.ball_security))}${bar('Usage', num(advanced.usage_rate))}</article>`;
+    }
+    function renderPlayerCompare() {
+      $('playerCompare').innerHTML = playerCompareCard(playerBySelect('playerA'), 'Player A') + playerCompareCard(playerBySelect('playerB'), 'Player B');
+    }
+    function renderAdvanced() {
+      $('advancedTable').innerHTML = app.advanced
+        .slice().sort((a,b) => num(b.role_fit_score)-num(a.role_fit_score))
+        .map(r => `<tr><td><strong>${esc(r.player)}</strong></td><td>${esc(r.team)}</td><td>${esc(r.role_group)}</td><td><strong>${fmt(r.role_fit_score)}</strong></td><td>${fmt(r.attacking_involvement)}</td><td>${fmt(r.progression_value)}</td><td>${fmt(r.ball_security)}</td><td>${fmt(r.defensive_disruption)}</td><td>${fmt(r.two_way_value)}</td><td>${fmt(r.usage_rate)}</td></tr>`)
+        .join('');
+    }
+    function renderValidation() {
+      const v = app.validation || {}, b = app.backtest || {};
+      const cards = [
+        ['Rating MAE', v.mae ?? 'n/a', 'lower is better'],
+        ['Correlation', v.correlation ?? 'n/a', 'external rating alignment'],
+        ['Within 0.5', pct(v.within_half_point_rate), 'close rating share'],
+        ['Top-3 Score', pct(b.exact_score_top3_rate), 'exact score backtest'],
+        ['Outcome Accuracy', pct(b.outcome_accuracy), 'W/D/L backtest'],
+        ['Log Loss', b.log_loss ?? 'n/a', 'probability penalty'],
+      ];
+      $('validation').innerHTML = cards.map(([label,value,detail]) => `<section class="metric-card"><span>${label}</span><strong>${value}</strong><small>${detail}</small></section>`).join('');
+    }
+    function renderAll() {
+      renderBanner(); renderKpis(); renderPrediction(); renderTeamCompare(); renderPlayers(); renderPlayerCompare(); renderAdvanced(); renderValidation();
+    }
+    populateControls();
+    ['teamA','teamB'].forEach(id => $(id).addEventListener('change', renderTeamCompare));
+    ['playerA','playerB'].forEach(id => $(id).addEventListener('change', renderPlayerCompare));
+    $('playerSearch').addEventListener('input', renderPlayers);
+    $('roleFilter').addEventListener('change', renderPlayers);
+    renderAll();
+    </script>
 </body>
 </html>

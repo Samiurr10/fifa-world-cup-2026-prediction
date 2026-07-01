@@ -14,7 +14,7 @@ This is not a generic chatbot predictor. The project is a stats engine: data is 
 - Per-game player performance ratings.
 - Overall tournament player ratings.
 - SQLite database for matches, players, player-game stats, ratings, and validation.
-- Static visual dashboard for ratings, player trends, predictions, validation, and backtests.
+- Interactive visual dashboard for team comparison, searchable players, player ratings, predictions, validation, and backtests.
 - Grounded match reports that cite model inputs and uncertainty.
 
 ## Data Sources
@@ -38,7 +38,7 @@ free data sources
   -> predictors.py xG, scorelines, outcome probabilities, player impact
   -> reports.py grounded match/player explanation
   -> database.py stores player stats, game ratings, overall ratings, validation
-  -> visuals.py renders clean HTML/SVG dashboards
+  -> visuals.py renders clean interactive dashboards
   -> cli.py repeatable command-line workflows
 ```
 
@@ -129,6 +129,8 @@ Then open:
 site/index.html
 ```
 
+The dashboard lets you choose any two loaded teams, compare their profiles and rosters, search every loaded player, filter by role, compare two players side by side, inspect role-fit metrics, and review prediction and validation outputs.
+
 Normalize an openfootball-style JSON file:
 
 ```bash
@@ -149,7 +151,7 @@ The v1 model is transparent and auditable:
 - Backtesting tracks exact-score top-3 hit rate, outcome accuracy, Brier score, log loss, and calibration buckets.
 - Player ratings are role-aware, stored per game, aggregated overall, and validated against external ratings when available.
 - Advanced role-fit metrics track attacking involvement, progression, ball security, defensive disruption, goalkeeping value, two-way value, usage, and xG efficiency.
-- Visual dashboards are generated from the real report outputs and include rating trends, player component charts, advanced metric tables, prediction bars, validation metrics, and leaderboards.
+- Visual dashboards are generated from the real report outputs and include team selectors, roster comparison, searchable player tables, player-vs-player comparison, advanced metric tables, prediction bars, validation metrics, and leaderboards.
 
 ## Player Rating Database
 
@@ -166,7 +168,7 @@ See [docs/database.md](docs/database.md) and [docs/player-ratings.md](docs/playe
 
 ## Visual Dashboard
 
-The dashboard is a self-contained HTML file with inline CSS/SVG visuals. It can be opened directly or published later with GitHub Pages.
+The dashboard is a self-contained HTML file with inline CSS and vanilla JavaScript. It can be opened directly or published later with GitHub Pages.
 
 See [docs/visual-dashboard.md](docs/visual-dashboard.md).
 

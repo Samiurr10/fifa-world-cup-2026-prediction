@@ -50,6 +50,16 @@ class VisualDashboardTest(unittest.TestCase):
                     "xg_efficiency": "5.4",
                 }
             ],
+            team_rows=[
+                {
+                    "team": "Argentina",
+                    "opponent": "France",
+                    "xg_for": "1.5",
+                    "xg_against": "1.2",
+                    "shots_for": "12",
+                    "shots_against": "9",
+                }
+            ],
             prediction={
                 "home_team": "Argentina",
                 "away_team": "France",
@@ -66,12 +76,13 @@ class VisualDashboardTest(unittest.TestCase):
             backtest={"exact_score_top3_rate": 0.5, "outcome_accuracy": 0.6, "log_loss": 1.0},
         )
 
-        self.assertIn("Match Prediction", markup)
+        self.assertIn("Interactive dashboard", markup)
+        self.assertIn("playerSearch", markup)
+        self.assertIn("teamA", markup)
         self.assertIn("Demo data view", markup)
-        self.assertIn("Overall leaderboard", markup)
-        self.assertIn("Best single-game performances", markup)
-        self.assertIn("Role-fit and advanced player metrics", markup)
-        self.assertIn("&lt;Player&gt;", markup)
+        self.assertIn("Searchable player ratings", markup)
+        self.assertIn("Role-fit leaderboard", markup)
+        self.assertIn("\\u003cPlayer\\u003e", markup)
         self.assertNotIn("<Player>", markup)
 
     def test_generate_dashboard_writes_html_file(self):
@@ -81,6 +92,7 @@ class VisualDashboardTest(unittest.TestCase):
                 overall_ratings_path="reports/player_overall_ratings.csv",
                 game_ratings_path="reports/player_game_ratings.csv",
                 advanced_metrics_path="reports/player_advanced_metrics.csv",
+                team_stats_path="data/sample/team_match_stats_sample.csv",
                 prediction_path="reports/match_prediction.json",
                 validation_path="reports/rating_validation.json",
                 backtest_path="reports/backtest.json",

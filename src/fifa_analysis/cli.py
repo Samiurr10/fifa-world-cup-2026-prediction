@@ -250,6 +250,7 @@ def command_dashboard(args: argparse.Namespace) -> None:
         overall_ratings_path=args.overall_ratings,
         game_ratings_path=args.game_ratings,
         advanced_metrics_path=args.advanced_metrics,
+        team_stats_path=args.team_stats,
         prediction_path=args.prediction,
         validation_path=args.validation,
         backtest_path=args.backtest,
@@ -418,6 +419,7 @@ def build_parser() -> argparse.ArgumentParser:
     dashboard.add_argument(
         "--advanced-metrics", type=Path, default=Path("reports/player_advanced_metrics.csv")
     )
+    dashboard.add_argument("--team-stats", type=Path, default=Path("data/sample/team_match_stats_sample.csv"))
     dashboard.add_argument("--prediction", type=Path, default=Path("reports/match_prediction.json"))
     dashboard.add_argument("--validation", type=Path, default=Path("reports/rating_validation.json"))
     dashboard.add_argument("--backtest", type=Path, default=Path("reports/backtest.json"))
