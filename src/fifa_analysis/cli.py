@@ -38,6 +38,7 @@ from fifa_analysis.ratings import (
     rate_player_game,
 )
 from fifa_analysis.reports import generate_match_report
+from fifa_analysis.statsbomb import statsbomb_files_to_player_stats
 from fifa_analysis.validation import compare_external_ratings, rating_coverage, read_external_ratings
 
 
@@ -216,6 +217,18 @@ def command_rating_coverage(args: argparse.Namespace) -> None:
         print(json.dumps(result, indent=2))
 
 
+def command_statsbomb_player_stats(args: argparse.Namespace) -> None:
+    rows = statsbomb_files_to_player_stats(
+        events_path=args.events,
+        lineups_path=args.lineups,
+        match_id=args.match_id,
+        home_team=args.home,
+        away_team=args.away,
+    )
+    write_csv_rows(args.output, [row.__dict__ for row in rows])
+    print(f"Wrote {len(rows)} StatsBomb-normalized player stat rows to {args.output}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="FIFA World Cup player contribution and prediction analysis."
@@ -345,6 +358,18 @@ def build_parser() -> argparse.ArgumentParser:
     coverage.add_argument("--db", type=Path, default=Path("data/db/worldcup_ratings.sqlite"))
     coverage.add_argument("--output", type=Path)
     coverage.set_defaults(func=command_rating_coverage)
+
+    statsbomb_stats = subparsers.add_parser(
+        "statsbomb-player-stats",
+        help="Convert StatsBomb event and optional lineup JSON into player-game stats CSV.",
+    )
+    statsbomb_stats.add_argument("--events", type=Path, required=True)
+    statsbomb_stats.add_argument("--lineups", type=Path)
+    statsbomb_stats.add_argument("--match-id", required=True)
+    statsbomb_stats.add_argument("--home", required=True)
+    statsbomb_stats.add_argument("--away", required=True)
+    statsbomb_stats.add_argument("--output", type=Path, default=Path("reports/statsbomb_player_stats.csv"))
+    statsbomb_stats.set_defaults(func=command_statsbomb_player_stats)
 
     return parser
 
