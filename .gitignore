@@ -6,7 +6,8 @@ __pycache__/
 venv/
 data/raw/*
 !data/raw/.gitkeep
+data/db/*
+!data/db/.gitkeep
 reports/*
 !reports/.gitkeep
 .DS_Store
-
