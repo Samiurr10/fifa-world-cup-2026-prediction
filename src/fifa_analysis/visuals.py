@@ -45,12 +45,14 @@ def dashboard_data(
     validation: dict[str, Any],
     backtest: dict[str, Any],
     roster_rows: list[dict[str, str]] | None = None,
+    tournament_stats_rows: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     return {
         "overall": overall_rows,
         "games": game_rows,
         "advanced": advanced_rows,
         "roster": roster_rows or [],
+        "tournamentStats": tournament_stats_rows or [],
         "teamStats": team_rows,
         "prediction": prediction,
         "validation": validation,
@@ -106,8 +108,10 @@ def render_dashboard(
           Sort Players
           <select id="sortMode">
             <option value="roster_index">Roster index</option>
+            <option value="wc_goals">World Cup goals</option>
+            <option value="wc_goal_assists">World Cup G+A</option>
+            <option value="career_goals">Career int'l goals</option>
             <option value="caps">Caps</option>
-            <option value="goals">International goals</option>
             <option value="rating">Model rating</option>
             <option value="age">Age</option>
             <option value="height">Height</option>
@@ -141,7 +145,8 @@ def render_dashboard(
               </div>
               <select id="teamMetricMode">
                 <option value="caps">Average caps</option>
-                <option value="goals">International goals</option>
+                <option value="wc_goals">World Cup goals</option>
+                <option value="career_goals">Career int'l goals</option>
                 <option value="age">Average age</option>
                 <option value="height">Average height</option>
               </select>
@@ -192,7 +197,7 @@ def render_dashboard(
               <thead>
                 <tr>
                   <th>Player</th><th>Team</th><th>Role</th><th>Club</th><th>Age</th>
-                  <th>Caps</th><th>Goals</th><th>Rating</th><th>Status</th>
+                  <th>Caps</th><th>WC G</th><th>WC A</th><th>Career G</th><th>Rating</th><th>Status</th>
                 </tr>
               </thead>
               <tbody id="playerTable"></tbody>
@@ -466,6 +471,20 @@ const num = (value) => Number.parseFloat(value || 0) || 0;
 const fmt = (value, digits = 1) => num(value).toFixed(digits);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const average = (rows, getter) => rows.length ? rows.reduce((total, row) => total + getter(row), 0) / rows.length : 0;
+const normalizeKey = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+const normalizeTeamKey = (value) => {
+  const key = normalizeKey(value);
+  const aliases = {
+    drcongo: 'congodr',
+    drc: 'congodr',
+    ivorycoast: 'cotedivoire',
+    cotedivoire: 'cotedivoire',
+    iran: 'iriran',
+    usa: 'unitedstates',
+    unitedstatesofamerica: 'unitedstates',
+  };
+  return aliases[key] || key;
+};
 
 function parseDate(value) {
   if (!value) return null;
@@ -506,8 +525,39 @@ function displayName(row) {
   return row.player_name || row.player || '';
 }
 
+function reversedName(value) {
+  const parts = String(value || '').trim().split(/\s+/);
+  if (parts.length < 2) return '';
+  return titleCase(`${parts.slice(1).join(' ')} ${parts[0]}`);
+}
+
+function matchNames(row, player) {
+  const first = titleCase(String(row.first_names || '').split(/[\s-]+/)[0] || '');
+  return [
+    player,
+    titleCase(row.player_name || ''),
+    reversedName(row.player_name || ''),
+    titleCase(`${row.first_names || ''} ${row.last_names || ''}`.replace(/\s+/g, ' ').trim()),
+    titleCase(`${first} ${row.last_names || ''}`.replace(/\s+/g, ' ').trim()),
+    titleCase(`${first} ${row.name_on_shirt || ''}`.replace(/\s+/g, ' ').trim()),
+    titleCase(row.name_on_shirt || ''),
+  ].filter(Boolean);
+}
+
 function titleCase(value) {
   return String(value || '').toLowerCase().replace(/\b[\p{L}'][\p{L}']*/gu, (word) => word.charAt(0).toUpperCase() + word.slice(1));
+}
+
+function playerNameMatches(wantedName, existing) {
+  const wanted = normalizeKey(wantedName);
+  const wantedTokens = String(wantedName || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/[a-z0-9]+/g) || [];
+  const candidates = existing.matchNames || [existing.player];
+  return candidates.some((candidate) => {
+    const candidateKey = normalizeKey(candidate);
+    if (candidateKey === wanted) return true;
+    const candidateTokens = String(candidate || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/[a-z0-9]+/g) || [];
+    return wantedTokens.length > 1 && wantedTokens.every((token) => candidateTokens.includes(token));
+  });
 }
 
 function ratingValue(player) {
@@ -538,6 +588,7 @@ function buildModel(data) {
       dob: row.dob || '',
       squadNumber: row.squad_number || '',
       source: row.source || '',
+      matchNames: matchNames(row, player),
       status: 'awaiting match stats',
     });
   });
@@ -556,6 +607,33 @@ function buildModel(data) {
       status: row.confidence || 'rated',
     });
   });
+  data.tournamentStats.forEach((row) => {
+    const wantedTeam = normalizeTeamKey(row.team);
+    let key = [...merged.keys()].find((candidate) => {
+      const existing = merged.get(candidate);
+      return playerNameMatches(row.player, existing) && normalizeTeamKey(existing.team) === wantedTeam;
+    });
+    if (!key) {
+      return;
+    }
+    const existing = merged.get(key);
+    const fields = [
+      ['wcGoals', 'wc_goals'],
+      ['wcAssists', 'wc_assists'],
+      ['wcGoalAssists', 'wc_goal_assists'],
+      ['wcXg', 'wc_xg'],
+      ['wcXa', 'wc_xa'],
+      ['wcCleanSheets', 'wc_clean_sheets'],
+      ['wcSavesPerGame', 'wc_saves_per_game'],
+      ['wcGoalsConcededPerGame', 'wc_goals_conceded_per_game'],
+    ];
+    fields.forEach(([target, source]) => {
+      const value = num(row[source]);
+      if (value || existing[target] === undefined) existing[target] = Math.max(num(existing[target]), value);
+    });
+    existing.tournamentSource = row.source || 'tournament stats';
+    if (row.position && (!existing.role || existing.role === 'Unknown')) existing.role = row.position;
+  });
   state.players = [...merged.values()].filter((player) => player.player && player.team);
   state.teams = [...new Set(state.players.map((player) => player.team))].sort();
 }
@@ -573,14 +651,15 @@ function teamProfile(team) {
     rated,
     players: roster.length,
     caps: roster.reduce((total, player) => total + player.caps, 0),
-    goals: roster.reduce((total, player) => total + player.goals, 0),
+    careerGoals: roster.reduce((total, player) => total + player.goals, 0),
+    wcGoals: roster.reduce((total, player) => total + num(player.wcGoals), 0),
     avgCaps: average(roster, (player) => player.caps),
     avgAge: average(roster, (player) => player.age),
     avgHeight: average(roster, (player) => player.height),
     rating: average(rated, (player) => ratingValue(player) || 0),
     roleCounts,
     topCaps: [...roster].sort((a, b) => b.caps - a.caps).slice(0, 5),
-    topGoals: [...roster].sort((a, b) => b.goals - a.goals).slice(0, 5),
+    topGoals: [...roster].sort((a, b) => num(b.wcGoals) - num(a.wcGoals)).slice(0, 5),
   };
 }
 
@@ -598,7 +677,9 @@ function filteredPlayers() {
   const sorters = {
     roster_index: (a, b) => a.team.localeCompare(b.team) || num(a.squadNumber) - num(b.squadNumber),
     caps: (a, b) => b.caps - a.caps,
-    goals: (a, b) => b.goals - a.goals,
+    wc_goals: (a, b) => num(b.wcGoals) - num(a.wcGoals),
+    wc_goal_assists: (a, b) => num(b.wcGoalAssists) - num(a.wcGoalAssists),
+    career_goals: (a, b) => b.goals - a.goals,
     rating: (a, b) => (ratingValue(b) ?? -1) - (ratingValue(a) ?? -1),
     age: (a, b) => b.age - a.age,
     height: (a, b) => b.height - a.height,
@@ -616,8 +697,8 @@ function miniStat(label, value) {
 }
 
 function playerLine(player, mode = 'caps') {
-  const value = mode === 'goals' ? player.goals : player.caps;
-  const label = mode === 'goals' ? 'goals' : 'caps';
+  const value = mode === 'wc_goals' ? num(player.wcGoals) : player.caps;
+  const label = mode === 'wc_goals' ? 'WC goals' : 'caps';
   return `<div class="leader-row"><div class="leader-info"><strong>${esc(player.player)}</strong><span class="muted">${esc(player.team)} · ${esc(player.club || 'club n/a')}</span></div><strong>${value} ${label}</strong></div>`;
 }
 
@@ -639,17 +720,19 @@ function renderNotice() {
 function renderKpis() {
   const hasRatings = state.players.filter((player) => ratingValue(player) !== null).length;
   const totalCaps = state.players.reduce((total, player) => total + player.caps, 0);
-  const totalGoals = state.players.reduce((total, player) => total + player.goals, 0);
-  const topScorer = [...state.players].sort((a, b) => b.goals - a.goals)[0] || {};
+  const totalCareerGoals = state.players.reduce((total, player) => total + player.goals, 0);
+  const totalWcGoals = state.players.reduce((total, player) => total + num(player.wcGoals), 0);
+  const topScorer = [...state.players].sort((a, b) => num(b.wcGoals) - num(a.wcGoals) || num(b.wcGoalAssists) - num(a.wcGoalAssists))[0] || {};
   const mostCapped = [...state.players].sort((a, b) => b.caps - a.caps)[0] || {};
   const cards = [
     ['Teams', state.teams.length, 'official squads loaded'],
     ['Players', state.players.length, 'searchable squad players'],
     ['Rated Players', hasRatings, 'from API/player stats'],
     ['Total Caps', totalCaps.toLocaleString(), 'international experience'],
-    ['Squad Goals', totalGoals.toLocaleString(), 'international goals'],
+    ['WC Goals', totalWcGoals.toLocaleString(), 'tracked tournament goals'],
+    ['Career Goals', totalCareerGoals.toLocaleString(), 'squad international goals'],
     ['Most Capped', mostCapped.player || 'n/a', `${mostCapped.team || ''} · ${mostCapped.caps || 0} caps`],
-    ['Top Scorer', topScorer.player || 'n/a', `${topScorer.team || ''} · ${topScorer.goals || 0} goals`],
+    ['Top WC Scorer', topScorer.player || 'n/a', `${topScorer.team || ''} · ${num(topScorer.wcGoals)} WC goals`],
   ];
   $('kpis').innerHTML = cards.map(([label, value, detail]) => `<article class="kpi-card"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(detail)}</small></article>`).join('');
 }
@@ -677,13 +760,15 @@ function renderTeamBars() {
   const profiles = state.teams.map(teamProfile);
   const getters = {
     caps: (profile) => profile.avgCaps,
-    goals: (profile) => profile.goals,
+    wc_goals: (profile) => profile.wcGoals,
+    career_goals: (profile) => profile.careerGoals,
     age: (profile) => profile.avgAge,
     height: (profile) => profile.avgHeight,
   };
   const labels = {
     caps: (value) => `${fmt(value)} avg`,
-    goals: (value) => `${Math.round(value)} goals`,
+    wc_goals: (value) => `${Math.round(value)} WC goals`,
+    career_goals: (value) => `${Math.round(value)} career`,
     age: (value) => `${fmt(value)} yrs`,
     height: (value) => `${fmt(value)} cm`,
   };
@@ -712,8 +797,8 @@ function renderRoleDonut() {
 }
 
 function renderLeaders() {
-  const rows = [...state.players].sort((a, b) => (b.goals * 4 + b.caps) - (a.goals * 4 + a.caps)).slice(0, 10);
-  $('leaderList').innerHTML = rows.map((player) => playerLine(player, player.goals >= player.caps / 8 ? 'goals' : 'caps')).join('');
+  const rows = [...state.players].sort((a, b) => num(b.wcGoals) - num(a.wcGoals) || num(b.wcGoalAssists) - num(a.wcGoalAssists) || b.caps - a.caps).slice(0, 10);
+  $('leaderList').innerHTML = rows.map((player) => playerLine(player, num(player.wcGoals) ? 'wc_goals' : 'caps')).join('');
 }
 
 function teamCard(profile, side) {
@@ -727,7 +812,7 @@ function teamCard(profile, side) {
     <p class="eyebrow">${esc(side)}</p>
     <h2>${esc(profile.team)}</h2>
     <div class="team-score">${profile.rated.length ? fmt(profile.rating, 2) : 'Pending'}</div>
-    <p class="team-meta">${profile.players} players · ${profile.caps.toLocaleString()} caps · ${profile.goals.toLocaleString()} goals</p>
+    <p class="team-meta">${profile.players} players · ${profile.caps.toLocaleString()} caps · ${profile.wcGoals.toLocaleString()} WC goals · ${profile.careerGoals.toLocaleString()} career int'l goals</p>
     <div class="mini-grid">
       ${miniStat('Avg Age', fmt(profile.avgAge))}
       ${miniStat('Avg Height', `${fmt(profile.avgHeight)} cm`)}
@@ -765,7 +850,9 @@ function playerCard(player) {
     </div>
     <div class="mini-grid">
       ${miniStat('Caps', player.caps)}
-      ${miniStat('Goals', player.goals)}
+      ${miniStat('WC Goals', num(player.wcGoals))}
+      ${miniStat('WC Assists', num(player.wcAssists))}
+      ${miniStat('Career G', player.goals)}
       ${miniStat('Matches', player.matches || 0)}
       ${miniStat('Status', player.status || 'pending')}
     </div>
@@ -783,6 +870,8 @@ function renderPlayers() {
     <td>${esc(player.club || 'n/a')}</td>
     <td>${esc(player.age || 'n/a')}</td>
     <td>${player.caps}</td>
+    <td>${num(player.wcGoals)}</td>
+    <td>${num(player.wcAssists)}</td>
     <td>${player.goals}</td>
     <td><strong>${ratingText(player)}</strong></td>
     <td><span class="tag ${ratingValue(player) === null ? 'warn' : 'good'}">${esc(player.status || 'pending')}</span></td>
@@ -809,7 +898,7 @@ function playerCompareCard(player, label) {
 function renderPlayerCompare() {
   const a = selectedPlayer('playerA');
   const b = selectedPlayer('playerB');
-  $('playerCompare').innerHTML = `${playerCompareCard(a, 'Player A')}${playerCompareCard(b, 'Player B')}<article class="panel" style="grid-column:1 / -1"><p class="eyebrow">Head To Head</p><h2>Profile Comparison</h2><div class="comparison-bars">${compareMetric('Caps', a.caps, b.caps)}${compareMetric('International goals', a.goals, b.goals)}${compareMetric('Age', a.age, b.age)}${compareMetric('Height', a.height, b.height)}</div></article>`;
+  $('playerCompare').innerHTML = `${playerCompareCard(a, 'Player A')}${playerCompareCard(b, 'Player B')}<article class="panel" style="grid-column:1 / -1"><p class="eyebrow">Head To Head</p><h2>Profile Comparison</h2><div class="comparison-bars">${compareMetric('World Cup goals', num(a.wcGoals), num(b.wcGoals))}${compareMetric('World Cup assists', num(a.wcAssists), num(b.wcAssists))}${compareMetric('xG', num(a.wcXg), num(b.wcXg))}${compareMetric('Caps', a.caps, b.caps)}${compareMetric("Career int'l goals", a.goals, b.goals)}${compareMetric('Age', a.age, b.age)}${compareMetric('Height', a.height, b.height)}</div></article>`;
 }
 
 function renderPrediction() {
@@ -828,6 +917,7 @@ function renderCoverage() {
   const advanced = state.data.advanced.length;
   const cards = [
     ['Official roster', `${state.players.length} players`, 'Loaded from FIFA squad list CSV'],
+    ['World Cup stat leaders', `${state.data.tournamentStats.length} rows`, 'Goals, assists, xG, xA, clean sheets, saves from researched public stat pages'],
     ['Teams', `${state.teams.length} squads`, 'All selectable and searchable'],
     ['Player ratings', `${rated} players`, rated ? 'Imported stats are rated' : 'Pending API-Football fixture stats'],
     ['Player games', `${games} rows`, games ? 'Per-game stats available' : 'No real player-game rows imported yet'],
@@ -890,6 +980,7 @@ def generate_dashboard(
     game_ratings_path: str | Path,
     advanced_metrics_path: str | Path,
     roster_path: str | Path,
+    tournament_stats_path: str | Path,
     team_stats_path: str | Path,
     prediction_path: str | Path,
     validation_path: str | Path,
@@ -907,6 +998,7 @@ def generate_dashboard(
         game_rows=read_csv(game_ratings_path),
         advanced_rows=read_csv(advanced_metrics_path),
         roster_rows=read_csv(roster_path),
+        tournament_stats_rows=read_csv(tournament_stats_path),
         team_rows=read_csv(team_stats_path),
         prediction=read_json(prediction_path),
         validation=read_json(validation_path),

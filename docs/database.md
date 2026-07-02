@@ -106,6 +106,8 @@ The database can store all World Cup players, but the completeness depends on th
 - squad/roster data can populate all players
 - lineup data can populate players who appeared in matches
 - event/player-stat data can produce meaningful game ratings
+- tournament stat-leader files can populate current World Cup leader metrics, but they do not replace full per-match player stats
 
 If a player exists only in a roster but has no minutes or stats, they should be stored as a player but should not receive a confident performance rating.
 
+The FIFA squad list `international_goals` field is a career national-team total. World Cup 2026 goals, assists, xG, xA, clean sheets, conceded rate, and saves are stored separately in `data/official/world_cup_2026_player_stats.csv` so career goals are never presented as tournament goals.

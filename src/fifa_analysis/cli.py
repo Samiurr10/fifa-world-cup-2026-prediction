@@ -313,6 +313,7 @@ def command_dashboard(args: argparse.Namespace) -> None:
         game_ratings_path=args.game_ratings,
         advanced_metrics_path=args.advanced_metrics,
         roster_path=args.roster,
+        tournament_stats_path=args.tournament_stats,
         team_stats_path=args.team_stats,
         prediction_path=args.prediction,
         validation_path=args.validation,
@@ -512,6 +513,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--advanced-metrics", type=Path, default=Path("reports/api_football_player_advanced_metrics.csv")
     )
     dashboard.add_argument("--roster", type=Path, default=Path("data/official/fifa_squads_2026.csv"))
+    dashboard.add_argument(
+        "--tournament-stats",
+        type=Path,
+        default=Path("data/official/world_cup_2026_player_stats.csv"),
+    )
     dashboard.add_argument("--team-stats", type=Path, default=Path("reports/api_football_team_match_stats.csv"))
     dashboard.add_argument("--prediction", type=Path, default=Path("reports/api_football_match_prediction.json"))
     dashboard.add_argument("--validation", type=Path, default=Path("reports/api_football_rating_validation.json"))

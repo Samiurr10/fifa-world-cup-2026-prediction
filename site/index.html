@@ -42,8 +42,10 @@
           Sort Players
           <select id="sortMode">
             <option value="roster_index">Roster index</option>
+            <option value="wc_goals">World Cup goals</option>
+            <option value="wc_goal_assists">World Cup G+A</option>
+            <option value="career_goals">Career int'l goals</option>
             <option value="caps">Caps</option>
-            <option value="goals">International goals</option>
             <option value="rating">Model rating</option>
             <option value="age">Age</option>
             <option value="height">Height</option>
@@ -77,7 +79,8 @@
               </div>
               <select id="teamMetricMode">
                 <option value="caps">Average caps</option>
-                <option value="goals">International goals</option>
+                <option value="wc_goals">World Cup goals</option>
+                <option value="career_goals">Career int'l goals</option>
                 <option value="age">Average age</option>
                 <option value="height">Average height</option>
               </select>
@@ -128,7 +131,7 @@
               <thead>
                 <tr>
                   <th>Player</th><th>Team</th><th>Role</th><th>Club</th><th>Age</th>
-                  <th>Caps</th><th>Goals</th><th>Rating</th><th>Status</th>
+                  <th>Caps</th><th>WC G</th><th>WC A</th><th>Career G</th><th>Rating</th><th>Status</th>
                 </tr>
               </thead>
               <tbody id="playerTable"></tbody>

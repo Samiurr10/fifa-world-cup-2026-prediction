@@ -93,6 +93,7 @@ class VisualDashboardTest(unittest.TestCase):
                 game_ratings_path="reports/player_game_ratings.csv",
                 advanced_metrics_path="reports/player_advanced_metrics.csv",
                 roster_path="data/official/fifa_squads_2026.csv",
+                tournament_stats_path="data/official/world_cup_2026_player_stats.csv",
                 team_stats_path="data/sample/team_match_stats_sample.csv",
                 prediction_path="reports/match_prediction.json",
                 validation_path="reports/rating_validation.json",
@@ -105,6 +106,7 @@ class VisualDashboardTest(unittest.TestCase):
             self.assertTrue((Path(tmpdir) / "index-assets" / "dashboard.js").exists())
             self.assertTrue((Path(tmpdir) / "index-assets" / "app-data.json").exists())
             self.assertIn("<!doctype html>", output.read_text(encoding="utf-8"))
+            self.assertIn("tournamentStats", (Path(tmpdir) / "index-assets" / "app-data.json").read_text())
 
 
 if __name__ == "__main__":

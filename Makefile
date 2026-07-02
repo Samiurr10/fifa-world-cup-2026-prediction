@@ -45,7 +45,7 @@ sample-statsbomb:
 	PYTHONPATH=src python3 -m fifa_analysis.cli statsbomb-player-stats --events data/sample/events_sample.json --lineups data/sample/statsbomb_lineups_sample.json --match-id SAMPLE-1 --home Argentina --away France --output reports/statsbomb_player_stats.csv
 
 sample-dashboard:
-	PYTHONPATH=src python3 -m fifa_analysis.cli dashboard --overall-ratings reports/player_overall_ratings.csv --game-ratings reports/player_game_ratings.csv --advanced-metrics reports/player_advanced_metrics.csv --team-stats data/sample/team_match_stats_sample.csv --prediction reports/match_prediction.json --validation reports/rating_validation.json --backtest reports/backtest.json --output site/sample.html
+	PYTHONPATH=src python3 -m fifa_analysis.cli dashboard --overall-ratings reports/player_overall_ratings.csv --game-ratings reports/player_game_ratings.csv --advanced-metrics reports/player_advanced_metrics.csv --tournament-stats data/sample/world_cup_2026_player_stats_sample.csv --team-stats data/sample/team_match_stats_sample.csv --prediction reports/match_prediction.json --validation reports/rating_validation.json --backtest reports/backtest.json --output site/sample.html
 
 official-dashboard:
 	PYTHONPATH=src python3 -m fifa_analysis.cli dashboard --roster data/official/fifa_squads_2026.csv --output site/index.html
