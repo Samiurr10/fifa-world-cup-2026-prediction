@@ -11,7 +11,7 @@ This project is an accuracy-first football prediction engine built around normal
 - worldcup2026 API responses for 2026 tournament state.
 - football-data.org responses when an API token is available.
 - local CSV/Kaggle-style files for controlled experiments.
-- researched tournament-stat CSVs for World Cup-specific public stat leaders.
+- The Analyst/Opta aggregate player-stat JSON for current World Cup 2026 tournament totals.
 
 Each connector should output shared records from `schemas.py`, not provider-shaped data.
 
@@ -74,7 +74,7 @@ It also ranks player impact with role-specific formulas and opponent matchup adj
 `visuals.py` renders a generated static dashboard app from official roster data and generated CSV/JSON outputs:
 
 - official roster rows
-- World Cup 2026 tournament stat-leader rows
+- World Cup 2026 aggregate player-stat rows
 - overall ratings
 - player-game ratings
 - advanced role metrics

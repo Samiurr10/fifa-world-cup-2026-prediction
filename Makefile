@@ -1,4 +1,4 @@
-.PHONY: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-ratings sample-statsbomb sample-dashboard official-dashboard api-football-ingest verify
+.PHONY: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-ratings sample-statsbomb sample-dashboard official-dashboard api-football-ingest theanalyst-stats verify
 
 test:
 	PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py'
@@ -52,5 +52,8 @@ official-dashboard:
 
 api-football-ingest:
 	PYTHONPATH=src python3 -m fifa_analysis.cli ingest-api-football
+
+theanalyst-stats:
+	PYTHONPATH=src python3 -m fifa_analysis.cli ingest-theanalyst-stats --output data/official/world_cup_2026_player_stats.csv --db data/db/worldcup_2026_player_stats.sqlite
 
 verify: test sample-metrics sample-team sample-predict sample-evaluate sample-ingest sample-match sample-impact sample-report sample-backtest sample-statsbomb sample-ratings official-dashboard

@@ -10,6 +10,14 @@ data/db/worldcup_ratings.sqlite
 
 Generated databases are ignored by Git. The schema and commands are committed, not the local DB file.
 
+The Analyst aggregate tournament-stat import writes a separate local database:
+
+```text
+data/db/worldcup_2026_player_stats.sqlite
+```
+
+It contains `player_tournament_stats`, one row per player in the Opta-backed World Cup 2026 aggregate feed.
+
 ## Tables
 
 ### `teams`
@@ -106,8 +114,8 @@ The database can store all World Cup players, but the completeness depends on th
 - squad/roster data can populate all players
 - lineup data can populate players who appeared in matches
 - event/player-stat data can produce meaningful game ratings
-- tournament stat-leader files can populate current World Cup leader metrics, but they do not replace full per-match player stats
+- The Analyst aggregate tournament-stat file can populate current World Cup 2026 totals, but it does not replace full per-match player stats
 
 If a player exists only in a roster but has no minutes or stats, they should be stored as a player but should not receive a confident performance rating.
 
-The FIFA squad list `international_goals` field is a career national-team total. World Cup 2026 goals, assists, xG, xA, clean sheets, conceded rate, and saves are stored separately in `data/official/world_cup_2026_player_stats.csv` so career goals are never presented as tournament goals.
+The FIFA squad list `international_goals` field is a career national-team total. World Cup 2026 apps, minutes, goals, assists, xG, xA, shots, carries, progressive carries, defensive actions, and goalkeeping stats are stored separately in `data/official/world_cup_2026_player_stats.csv` so career goals are never presented as tournament goals.

@@ -26,8 +26,8 @@ Primary free sources:
 - [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026): no-key 2026 World Cup API candidate with matches, teams, groups, standings, scores, and stadiums.
 - [football-data.org](https://www.football-data.org/documentation/api): backup fixture/result API; requires an API token.
 - FIFA official squad list PDF/CSV for the 48 World Cup squads and 1,248 players. Its `international_goals` value is a career national-team total, not a World Cup 2026 tournament total.
-- Researched World Cup 2026 public player-stat pages from [FIFA](https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/statistics/player-statistics), [365Scores](https://www.365scores.com/football/league/fifa-world-cup-5930/stats), [FotMob](https://www.fotmob.com/leagues/77/stats/world-cup/players?season=2026), and [FBref](https://fbref.com/en/comps/1/stats/World-Cup-Stats). The committed `data/official/world_cup_2026_player_stats.csv` file stores current public stat leaders for World Cup goals, assists, goal contributions, xG, xA, clean sheets, conceded rate, and saves.
-- API-Football for real teams, fixtures, squads, and fixture player stats when `API_FOOTBALL_KEY` is available.
+- [The Analyst World Cup stats](https://theanalyst.com/competition/fifa-world-cup/stats): Opta-backed aggregate player stats. `make theanalyst-stats` fetches the underlying player JSON and writes `data/official/world_cup_2026_player_stats.csv` plus `data/db/worldcup_2026_player_stats.sqlite`.
+- API-Football for fixture-level lineups, squads, and per-match player stats when `API_FOOTBALL_KEY` is available. This is optional for the current aggregate dashboard but useful later for game-by-game ratings.
 
 Kaggle datasets can be added as local CSV inputs after checking columns and license terms.
 
@@ -126,6 +126,7 @@ The committed sample dataset uses synthetic `Demo ...` players only for pipeline
 Generate the official roster dashboard:
 
 ```bash
+make theanalyst-stats
 make official-dashboard
 ```
 
@@ -135,7 +136,18 @@ Then open:
 site/index.html
 ```
 
-The dashboard lets you choose any two teams, compare squad profiles, search all 1,248 official players, filter by team/role, compare players side by side, inspect World Cup goals/assists/xG separately from career international goals, and view rating/prediction coverage status.
+The dashboard lets you choose any two teams, compare squad profiles, search all 1,248 official players, filter by team/role, compare players side by side, inspect World Cup 2026 goals, assists, minutes, xG, shots, carries, progressive carries, interceptions, tackles, and career international goals separately, and view rating/prediction coverage status.
+
+Refresh the World Cup 2026 aggregate player stat database:
+
+```bash
+make theanalyst-stats
+```
+
+This creates:
+
+- `data/official/world_cup_2026_player_stats.csv`
+- `data/db/worldcup_2026_player_stats.sqlite`
 
 Fetch API-Football data after creating a free key:
 
@@ -144,7 +156,7 @@ export API_FOOTBALL_KEY=your_key_here
 make api-football-ingest
 ```
 
-API-Football fixture player stats can then be loaded into the rating database to unlock real per-game ratings, advanced metrics, and prediction confidence. Unsupported fields such as xG, pressures, and progressive carries remain empty instead of being invented.
+API-Football fixture player stats can then be loaded into the rating database to unlock real per-game ratings, lineup-aware models, and prediction confidence. The Analyst aggregate feed already covers current tournament totals such as goals, assists, xG, shots, passing, carries, defending, and goalkeeping.
 
 Generate the synthetic sample dashboard separately:
 
@@ -197,4 +209,4 @@ See [docs/visual-dashboard.md](docs/visual-dashboard.md).
 
 ## Accuracy Notes
 
-Free data will not always include confirmed lineups, injuries, complete current player-level match stats, or external player ratings. The system handles that by lowering confidence, exposing coverage reports, and validating only against rating sources that are actually provided. The official dashboard separates career international goals from World Cup 2026 tournament goals. Full every-player match stats still require a reliable feed such as API-Football fixture player statistics, a licensed export, or a checked local dataset.
+Free data will not always include confirmed lineups, injuries, complete fixture-by-fixture player stats, or external player ratings. The system handles that by lowering confidence, exposing coverage reports, and validating only against rating sources that are actually provided. The official dashboard separates career international goals from World Cup 2026 tournament goals. The Analyst/Opta aggregate feed supplies current tournament totals; full per-game ratings still require fixture-level stats from API-Football, a licensed export, or a checked local dataset.

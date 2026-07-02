@@ -13,6 +13,7 @@ Serve the repository root and open this file in a browser. The dashboard loads J
 ## Generate The Dashboard
 
 ```bash
+make theanalyst-stats
 make official-dashboard
 ```
 
@@ -50,8 +51,8 @@ The dashboard includes:
 - Searchable player database across every loaded player and team.
 - Role filters for narrowing ratings by tactical profile.
 - Player A and Player B selectors for side-by-side player comparison.
-- KPI cards for loaded players, teams, caps, World Cup goals, career international goals, rated players, top scorers, and most capped players.
-- Match prediction panel with pending-state guidance until real team/player stats are imported.
+- KPI cards for loaded players, teams, caps, matched World Cup 2026 stat rows, World Cup goals, career international goals, top scorers, and most capped players.
+- Match prediction panel with pending-state guidance until fixture-level team/player stats are imported.
 - Advanced player metrics table for attack, progression, security, disruption, two-way value, usage, and xG efficiency.
 - Rating validation cards with MAE, correlation, and within-half-point rate.
 - Backtest cards with exact-score top-3 rate, outcome accuracy, log loss, and calibration buckets.
@@ -62,15 +63,15 @@ The dashboard includes:
 
 The official FIFA squad CSV includes career international caps and goals. Those values are useful for experience context, but they are not World Cup 2026 tournament stats.
 
-Tournament-specific values come from `data/official/world_cup_2026_player_stats.csv`, which stores researched public stat-leader rows for World Cup goals, assists, goal contributions, xG, xA, clean sheets, conceded rate, and saves. The dashboard labels these as `WC Goals`, `WC Assists`, or xG/xA and keeps career totals under `Career Goals`.
+Tournament-specific values come from `data/official/world_cup_2026_player_stats.csv`, generated from The Analyst/Opta aggregate player stats. It includes World Cup 2026 apps, minutes, goals, assists, goal contributions, xG, xA, shots, passing, carries, progressive carries, tackles, interceptions, recoveries, clearances, and goalkeeping fields. The dashboard labels these as 2026 or WC stats and keeps career totals under `Career Goals`.
 
-If a player is in the official squad but not in the public tournament stat-leader file, their World Cup goals/assists display as `0` or blank, while career caps/goals still come from the FIFA squad list.
+If a player is in the official squad but not in the tournament stat file, their World Cup 2026 fields display as missing instead of pretending they are zero, while career caps/goals still come from the FIFA squad list.
 
 ## Design Rules
 
 - The dashboard is generated from real CSV/JSON outputs.
 - It does not invent missing player stats.
-- The default dashboard uses official FIFA squad data plus researched World Cup 2026 public stat leaders, and marks match ratings as pending until API-Football player stats are imported.
+- The default dashboard uses official FIFA squad data plus The Analyst/Opta World Cup 2026 aggregate player stats, and marks per-game ratings as pending until fixture-level player stats are imported.
 - The synthetic sample dashboard is isolated at `site/sample.html`.
 - It escapes dynamic values before rendering.
 - It is responsive for desktop and mobile widths.

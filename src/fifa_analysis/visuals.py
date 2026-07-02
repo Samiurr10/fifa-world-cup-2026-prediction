@@ -197,7 +197,9 @@ def render_dashboard(
               <thead>
                 <tr>
                   <th>Player</th><th>Team</th><th>Role</th><th>Club</th><th>Age</th>
-                  <th>Caps</th><th>WC G</th><th>WC A</th><th>Career G</th><th>Rating</th><th>Status</th>
+                  <th>Caps</th><th>2026 Apps</th><th>2026 Min</th><th>WC G</th><th>WC A</th>
+                  <th>xG</th><th>Shots</th><th>Carries</th><th>Prog Carries</th><th>Int</th><th>Tackles</th>
+                  <th>Career G</th><th>Rating</th><th>Status</th>
                 </tr>
               </thead>
               <tbody id="playerTable"></tbody>
@@ -477,11 +479,17 @@ const normalizeTeamKey = (value) => {
   const aliases = {
     drcongo: 'congodr',
     drc: 'congodr',
+    bosniaherzegovina: 'bosniaandherzegovina',
+    bosniaandherzegovina: 'bosniaandherzegovina',
+    bosnia: 'bosniaandherzegovina',
+    bosniahz: 'bosniaandherzegovina',
     ivorycoast: 'cotedivoire',
     cotedivoire: 'cotedivoire',
+    capeverde: 'caboverde',
+    caboverde: 'caboverde',
     iran: 'iriran',
-    usa: 'unitedstates',
-    unitedstatesofamerica: 'unitedstates',
+    unitedstates: 'usa',
+    unitedstatesofamerica: 'usa',
   };
   return aliases[key] || key;
 };
@@ -556,6 +564,7 @@ function playerNameMatches(wantedName, existing) {
     const candidateKey = normalizeKey(candidate);
     if (candidateKey === wanted) return true;
     const candidateTokens = String(candidate || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/[a-z0-9]+/g) || [];
+    if (wantedTokens.length === 1) return candidateTokens.includes(wantedTokens[0]);
     return wantedTokens.length > 1 && wantedTokens.every((token) => candidateTokens.includes(token));
   });
 }
@@ -567,6 +576,16 @@ function ratingValue(player) {
 function ratingText(player) {
   const rating = ratingValue(player);
   return rating === null ? 'Pending' : rating.toFixed(2);
+}
+
+function hasStat(player, key) {
+  return player[key] !== undefined && player[key] !== '';
+}
+
+function statText(player, key, digits = null) {
+  if (!hasStat(player, key)) return '—';
+  const value = num(player[key]);
+  return digits === null ? String(value) : value.toFixed(digits);
 }
 
 function buildModel(data) {
@@ -589,7 +608,7 @@ function buildModel(data) {
       squadNumber: row.squad_number || '',
       source: row.source || '',
       matchNames: matchNames(row, player),
-      status: 'awaiting match stats',
+      status: 'no 2026 minutes',
     });
   });
   data.overall.forEach((row) => {
@@ -618,11 +637,32 @@ function buildModel(data) {
     }
     const existing = merged.get(key);
     const fields = [
+      ['wcMatches', 'wc_matches'],
+      ['wcMinutes', 'wc_minutes'],
       ['wcGoals', 'wc_goals'],
       ['wcAssists', 'wc_assists'],
       ['wcGoalAssists', 'wc_goal_assists'],
       ['wcXg', 'wc_xg'],
       ['wcXa', 'wc_xa'],
+      ['wcShots', 'wc_shots'],
+      ['wcShotsOnTarget', 'wc_shots_on_target'],
+      ['wcChancesCreated', 'wc_chances_created'],
+      ['wcPasses', 'wc_passes'],
+      ['wcSuccessfulPasses', 'wc_successful_passes'],
+      ['wcPassCompletion', 'wc_pass_completion'],
+      ['wcCarries', 'wc_carries'],
+      ['wcProgressiveCarries', 'wc_progressive_carries'],
+      ['wcTackles', 'wc_tackles'],
+      ['wcInterceptions', 'wc_interceptions'],
+      ['wcRecoveries', 'wc_recoveries'],
+      ['wcBlocks', 'wc_blocks'],
+      ['wcClearances', 'wc_clearances'],
+      ['wcAerialDuels', 'wc_aerial_duels'],
+      ['wcAerialDuelsWon', 'wc_aerial_duels_won'],
+      ['wcSaves', 'wc_saves'],
+      ['wcSavePct', 'wc_save_pct'],
+      ['wcGoalsPrevented', 'wc_goals_prevented'],
+      ['wcGoalsConceded', 'wc_goals_conceded'],
       ['wcCleanSheets', 'wc_clean_sheets'],
       ['wcSavesPerGame', 'wc_saves_per_game'],
       ['wcGoalsConcededPerGame', 'wc_goals_conceded_per_game'],
@@ -631,7 +671,10 @@ function buildModel(data) {
       const value = num(row[source]);
       if (value || existing[target] === undefined) existing[target] = Math.max(num(existing[target]), value);
     });
+    existing.hasTournamentStats = true;
     existing.tournamentSource = row.source || 'tournament stats';
+    existing.tournamentLastUpdated = row.last_updated || row.accessed_date || '';
+    existing.status = '2026 stats loaded';
     if (row.position && (!existing.role || existing.role === 'Unknown')) existing.role = row.position;
   });
   state.players = [...merged.values()].filter((player) => player.player && player.team);
@@ -709,11 +752,12 @@ function renderNotice() {
   if (demo) {
     $('notice').innerHTML = '<strong>Demo mode.</strong> This dashboard is using synthetic sample ratings. Do not interpret them as real World Cup data.';
   } else if (!hasRatings) {
-    $('notice').innerHTML = '<strong>Official roster mode.</strong> The 48 squads and 1,248 players come from the FIFA squad list. Match ratings and prediction confidence will unlock after API-Football fixture player stats are imported with <code>API_FOOTBALL_KEY</code>.';
+    const tournamentRows = state.players.filter((player) => player.hasTournamentStats).length;
+    $('notice').innerHTML = `<strong>Official roster + 2026 stats mode.</strong> The 48 squads and 1,248 players come from the FIFA squad list. ${tournamentRows} players have current World Cup 2026 aggregate stats from The Analyst/Opta. API-Football is only needed later for fixture-level ratings, lineups, and per-game validation.`;
   } else {
     $('notice').innerHTML = '<strong>Rated data mode.</strong> Ratings are generated from imported player-match statistics. Interpret gaps according to data coverage.';
   }
-  $('dataModeBadge').textContent = demo ? 'Demo data' : hasRatings ? 'Rated data' : 'Official rosters';
+  $('dataModeBadge').textContent = demo ? 'Demo data' : hasRatings ? 'Rated data' : 'Official + 2026 stats';
   $('coverageBadge').textContent = `${state.teams.length} teams · ${state.players.length} players`;
 }
 
@@ -727,7 +771,7 @@ function renderKpis() {
   const cards = [
     ['Teams', state.teams.length, 'official squads loaded'],
     ['Players', state.players.length, 'searchable squad players'],
-    ['Rated Players', hasRatings, 'from API/player stats'],
+    ['2026 Stat Rows', state.players.filter((player) => player.hasTournamentStats).length, 'The Analyst/Opta tournament players'],
     ['Total Caps', totalCaps.toLocaleString(), 'international experience'],
     ['WC Goals', totalWcGoals.toLocaleString(), 'tracked tournament goals'],
     ['Career Goals', totalCareerGoals.toLocaleString(), 'squad international goals'],
@@ -850,10 +894,17 @@ function playerCard(player) {
     </div>
     <div class="mini-grid">
       ${miniStat('Caps', player.caps)}
-      ${miniStat('WC Goals', num(player.wcGoals))}
-      ${miniStat('WC Assists', num(player.wcAssists))}
+      ${miniStat('2026 Apps', statText(player, 'wcMatches'))}
+      ${miniStat('2026 Min', statText(player, 'wcMinutes'))}
+      ${miniStat('WC Goals', statText(player, 'wcGoals'))}
+      ${miniStat('WC Assists', statText(player, 'wcAssists'))}
+      ${miniStat('xG', statText(player, 'wcXg', 2))}
+      ${miniStat('Shots', statText(player, 'wcShots'))}
+      ${miniStat('Carries', statText(player, 'wcCarries'))}
+      ${miniStat('Prog Carries', statText(player, 'wcProgressiveCarries'))}
+      ${miniStat('Interceptions', statText(player, 'wcInterceptions'))}
+      ${miniStat('Tackles', statText(player, 'wcTackles'))}
       ${miniStat('Career G', player.goals)}
-      ${miniStat('Matches', player.matches || 0)}
       ${miniStat('Status', player.status || 'pending')}
     </div>
   </article>`;
@@ -870,11 +921,19 @@ function renderPlayers() {
     <td>${esc(player.club || 'n/a')}</td>
     <td>${esc(player.age || 'n/a')}</td>
     <td>${player.caps}</td>
-    <td>${num(player.wcGoals)}</td>
-    <td>${num(player.wcAssists)}</td>
+    <td>${statText(player, 'wcMatches')}</td>
+    <td>${statText(player, 'wcMinutes')}</td>
+    <td>${statText(player, 'wcGoals')}</td>
+    <td>${statText(player, 'wcAssists')}</td>
+    <td>${statText(player, 'wcXg', 2)}</td>
+    <td>${statText(player, 'wcShots')}</td>
+    <td>${statText(player, 'wcCarries')}</td>
+    <td>${statText(player, 'wcProgressiveCarries')}</td>
+    <td>${statText(player, 'wcInterceptions')}</td>
+    <td>${statText(player, 'wcTackles')}</td>
     <td>${player.goals}</td>
     <td><strong>${ratingText(player)}</strong></td>
-    <td><span class="tag ${ratingValue(player) === null ? 'warn' : 'good'}">${esc(player.status || 'pending')}</span></td>
+    <td><span class="tag ${player.hasTournamentStats ? 'good' : 'warn'}">${esc(player.status || 'pending')}</span></td>
   </tr>`).join('');
 }
 
@@ -898,13 +957,13 @@ function playerCompareCard(player, label) {
 function renderPlayerCompare() {
   const a = selectedPlayer('playerA');
   const b = selectedPlayer('playerB');
-  $('playerCompare').innerHTML = `${playerCompareCard(a, 'Player A')}${playerCompareCard(b, 'Player B')}<article class="panel" style="grid-column:1 / -1"><p class="eyebrow">Head To Head</p><h2>Profile Comparison</h2><div class="comparison-bars">${compareMetric('World Cup goals', num(a.wcGoals), num(b.wcGoals))}${compareMetric('World Cup assists', num(a.wcAssists), num(b.wcAssists))}${compareMetric('xG', num(a.wcXg), num(b.wcXg))}${compareMetric('Caps', a.caps, b.caps)}${compareMetric("Career int'l goals", a.goals, b.goals)}${compareMetric('Age', a.age, b.age)}${compareMetric('Height', a.height, b.height)}</div></article>`;
+  $('playerCompare').innerHTML = `${playerCompareCard(a, 'Player A')}${playerCompareCard(b, 'Player B')}<article class="panel" style="grid-column:1 / -1"><p class="eyebrow">Head To Head</p><h2>Profile Comparison</h2><div class="comparison-bars">${compareMetric('World Cup goals', num(a.wcGoals), num(b.wcGoals))}${compareMetric('World Cup assists', num(a.wcAssists), num(b.wcAssists))}${compareMetric('xG', num(a.wcXg), num(b.wcXg))}${compareMetric('Shots', num(a.wcShots), num(b.wcShots))}${compareMetric('Carries', num(a.wcCarries), num(b.wcCarries))}${compareMetric('Progressive carries', num(a.wcProgressiveCarries), num(b.wcProgressiveCarries))}${compareMetric('Interceptions', num(a.wcInterceptions), num(b.wcInterceptions))}${compareMetric('Tackles', num(a.wcTackles), num(b.wcTackles))}${compareMetric('Caps', a.caps, b.caps)}${compareMetric("Career int'l goals", a.goals, b.goals)}</div></article>`;
 }
 
 function renderPrediction() {
   const prediction = state.data.prediction || {};
   if (!prediction.home_team && !state.data.games.length) {
-    $('predictionPanel').innerHTML = `<article class="panel"><p class="eyebrow">Prediction Lab</p><h2>Waiting For Match Stats</h2><div class="empty-state">Predictions need real team match stats and, for player-level confidence, API-Football fixture player stats. Set <code>API_FOOTBALL_KEY</code>, run <code>make api-football-ingest</code>, load the exported stats into the rating DB, and regenerate this dashboard.</div></article>`;
+    $('predictionPanel').innerHTML = `<article class="panel"><p class="eyebrow">Prediction Lab</p><h2>Waiting For Fixture-Level Stats</h2><div class="empty-state">The dashboard now has aggregate World Cup 2026 player stats from The Analyst/Opta. Match predictions and per-game ratings still need fixture-level team/player rows. Run <code>make theanalyst-stats</code> to refresh aggregate stats, or use API-Football later when you want lineups and fixture-player ratings.</div></article>`;
     return;
   }
   const topScores = (prediction.top_scorelines || []).map((row) => barRow(row.score, num(row.probability), .2, `${fmt(num(row.probability) * 100)}%`)).join('');
@@ -917,7 +976,7 @@ function renderCoverage() {
   const advanced = state.data.advanced.length;
   const cards = [
     ['Official roster', `${state.players.length} players`, 'Loaded from FIFA squad list CSV'],
-    ['World Cup stat leaders', `${state.data.tournamentStats.length} rows`, 'Goals, assists, xG, xA, clean sheets, saves from researched public stat pages'],
+    ['World Cup 2026 player stats', `${state.data.tournamentStats.length} rows`, 'The Analyst/Opta aggregate player stats: goals, assists, xG, passing, carries, defending, goalkeeping'],
     ['Teams', `${state.teams.length} squads`, 'All selectable and searchable'],
     ['Player ratings', `${rated} players`, rated ? 'Imported stats are rated' : 'Pending API-Football fixture stats'],
     ['Player games', `${games} rows`, games ? 'Per-game stats available' : 'No real player-game rows imported yet'],

@@ -49,6 +49,14 @@ from fifa_analysis.ratings import (
 )
 from fifa_analysis.reports import generate_match_report
 from fifa_analysis.statsbomb import statsbomb_files_to_player_stats
+from fifa_analysis.theanalyst import (
+    THEANALYST_PLAYER_STATS_URL,
+    fetch_theanalyst_player_stats,
+    load_theanalyst_player_stats,
+    normalize_theanalyst_player_stats,
+    write_tournament_stats_csv,
+    write_tournament_stats_sqlite,
+)
 from fifa_analysis.validation import compare_external_ratings, rating_coverage, read_external_ratings
 from fifa_analysis.visuals import generate_dashboard
 
@@ -148,6 +156,22 @@ def command_ingest_api_football(args: argparse.Namespace) -> None:
     print(
         f"Wrote {len(team_rows)} teams, {len(matches)} matches, {len(roster_rows)} roster players, "
         f"and {len(player_stat_rows)} player stat rows from API-Football."
+    )
+
+
+def command_ingest_theanalyst_stats(args: argparse.Namespace) -> None:
+    source_url = args.source_url
+    if args.input:
+        payload = load_theanalyst_player_stats(args.input)
+    else:
+        payload = fetch_theanalyst_player_stats(source_url)
+    rows = normalize_theanalyst_player_stats(payload, source_url=source_url)
+    write_tournament_stats_csv(args.output, rows)
+    if args.db:
+        write_tournament_stats_sqlite(args.db, rows)
+    print(
+        f"Wrote {len(rows)} The Analyst World Cup player stat rows to {args.output}"
+        + (f" and {args.db}" if args.db else "")
     )
 
 
@@ -392,6 +416,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Limit fixture-player stat calls so free-tier users do not burn the full quota.",
     )
     api_football.set_defaults(func=command_ingest_api_football)
+
+    theanalyst = subparsers.add_parser(
+        "ingest-theanalyst-stats",
+        help="Fetch Opta Analyst World Cup player tournament stats into CSV and SQLite.",
+    )
+    theanalyst.add_argument("--input", type=Path, help="Use a saved The Analyst player-stats JSON file.")
+    theanalyst.add_argument("--source-url", default=THEANALYST_PLAYER_STATS_URL)
+    theanalyst.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/official/world_cup_2026_player_stats.csv"),
+    )
+    theanalyst.add_argument(
+        "--db",
+        type=Path,
+        default=Path("data/db/worldcup_2026_player_stats.sqlite"),
+        help="SQLite database path for player_tournament_stats. Use an empty value to skip.",
+    )
+    theanalyst.set_defaults(func=command_ingest_theanalyst_stats)
 
     match = subparsers.add_parser(
         "predict-match", help="Predict expected goals, top scorelines, and win/draw/loss."
